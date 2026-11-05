@@ -78,8 +78,8 @@
   /* console */
   #play { padding-block: 12px 56px; }
   .console { background: linear-gradient(180deg, var(--walnut-2), var(--walnut)); border: 1px solid #000; border-radius: 12px; padding: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 60px rgba(0, 0, 0, .55); scroll-margin-top: 12px; }
-  .bay { display: grid; grid-template-columns: minmax(0, 1fr) 216px; gap: 14px; align-items: stretch; }
-  .console { width: min(100%, calc((100vh - 150px) * 11 / 7 + 258px)); margin-inline: auto; }
+  .bay { display: grid; grid-template-columns: minmax(0, 1fr) var(--pw); gap: 14px; align-items: start; }
+  .console { --pw: clamp(176px, calc((100vh - 80px) / 2.46), 270px); width: min(100%, calc((100vh - 150px) * 11 / 7 + var(--pw) + 42px)); margin-inline: auto; }
   .tube { position: relative; background: #000; border: 3px solid var(--gold); border-radius: 6px; overflow: hidden; }
   #screen { display: block; width: 100%; height: auto; aspect-ratio: 11 / 7; cursor: pointer; touch-action: manipulation; }
   #screen:focus-visible { outline: none; }
@@ -93,22 +93,29 @@
   #over-go { font: 12px/1 var(--pixel); color: #0a0c1c; background: var(--prompt); border: 0; border-radius: 4px; padding: 13px 16px 12px; cursor: pointer; margin-top: 6px; box-shadow: 0 3px 0 #a39a00; }
   #overlay.low #over-go { margin-top: 0; }
 
-  /* the hand controller */
-  .pad { display: grid; grid-template-columns: 22px minmax(0, 1fr) 22px; gap: 8px; background: linear-gradient(180deg, #171310, #0b0907); border: 1px solid var(--gold); border-radius: 12px; padding: 12px 6px; user-select: none; -webkit-user-select: none; touch-action: none; }
-  .side { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
-  .side button { background: linear-gradient(90deg, #4a4032, #2b241a); border: 1px solid #0007; border-radius: 4px; padding: 0; cursor: pointer; color: var(--gold); font: 9px/1 var(--mono); writing-mode: vertical-rl; }
-  .side button.down { background: var(--prompt); color: #000; }
-  .face { display: grid; gap: 10px; align-content: space-between; }
-  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-  .keys button { font: 500 13px/1 var(--mono); color: #eee3c6; background: linear-gradient(180deg, #38302a, #1f1a15); border: 1px solid #000; border-radius: 3px; padding: 8px 0; cursor: pointer; }
-  .keys button.down { background: var(--gold); color: #000; }
-  #disc { position: relative; width: 100%; max-width: 148px; aspect-ratio: 1; justify-self: center; border-radius: 50%; background: radial-gradient(circle at 40% 34%, #e4c988, #a98a47 62%, #6d5729); border: 2px solid #000; cursor: pointer; touch-action: none; box-shadow: inset 0 0 0 7px rgba(0,0,0,.14); }
-  #disc::before, #disc::after { content: ""; position: absolute; left: 50%; top: 50%; background: rgba(0,0,0,.34); }
-  #disc::before { width: 2px; height: 76%; transform: translate(-50%, -50%); }
-  #disc::after { width: 76%; height: 2px; transform: translate(-50%, -50%); }
-  #knob { position: absolute; left: calc(50% - 11px); top: calc(50% - 11px); width: 22px; height: 22px; z-index: 1; border-radius: 50%; background: #1b1610; border: 2px solid #eed99f; }
-  #disc.down #knob { background: var(--prompt); }
-  .pad-note { margin: 0; text-align: center; font: 500 11px/1.3 var(--mono); color: var(--gold); }
+  /* the hand controller: the drawing itself is make_pad.py's */
+  .pad { user-select: none; -webkit-user-select: none; touch-action: none; }
+  .handset { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .5)); }
+  .handset.wide { display: none; }
+  .handset .hit { fill: transparent; }
+  .handset [role=button], .handset .d { cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  .handset text { pointer-events: none; text-anchor: middle; }
+  .handset .num { font-family: var(--body); font-weight: 700; fill: #2a1d10; }
+  .handset .ov { fill: #101639; stroke: var(--gold); stroke-width: 1; }
+  .handset .ovt { font-family: var(--pixel); fill: var(--prompt); letter-spacing: 1px; }
+  .handset .ovl { font-family: var(--mono); font-weight: 500; fill: #e6dcc6; }
+  .handset .ovf { font-family: var(--mono); font-weight: 500; fill: var(--gold); }
+  .handset .sl { font-family: var(--mono); font-weight: 500; fill: var(--gold); opacity: .8; }
+  .handset .k:hover .cap { filter: brightness(1.08); }
+  .handset .k.down .press { transform: translateY(1.5px); }
+  .handset .k.down .cap { fill: var(--prompt); }
+  .handset .s:hover .btn { filter: brightness(1.25); }
+  .handset .s.down .btn { fill: var(--prompt); }
+  .handset .s.down .sl { fill: var(--prompt); opacity: 1; }
+  .handset .knob { fill: var(--prompt); stroke: #6d5729; opacity: 0; pointer-events: none; }
+  .handset .d.down .knob { opacity: .92; }
+  .handset .d.down .plate { filter: brightness(.93); }
+  .pad-note { display: none; margin: 8px 0 0; text-align: center; font: 500 11px/1.3 var(--mono); color: var(--gold); }
 
   .deck { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
   .deck .group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -179,12 +186,14 @@
     .hero-grid { grid-template-columns: minmax(0, 1fr); }
     .bay { grid-template-columns: minmax(0, 1fr); }
     .console { width: 100%; }
-    .pad { grid-template-columns: 30px minmax(0, 1fr) 30px; padding: 12px 8px; }
-    .face { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
-    .keys { order: 1; }
-    #disc { order: 2; }
-    .pad-note { order: 3; grid-column: 1 / -1; }
-    .side button { font-size: 10px; }
+    .main { display: contents; }
+    .tube { order: 1; }
+    .pad { order: 2; width: min(100%, 560px); justify-self: center; }
+    .deck { order: 3; margin-top: 0; }
+    #status { order: 4; margin-top: 0; }
+    .handset.tall { display: none; }
+    .handset.wide { display: block; }
+    .pad-note { display: block; }
     .stage, .pits, .rules { grid-template-columns: minmax(0, 1fr); }
     .stage:nth-of-type(even) .scr { order: 0; }
     .moments { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -254,6 +263,7 @@
   <div class="wrap">
     <div class="console" id="player">
       <div class="bay">
+        <div class="main">
         <div class="tube">
           <canvas id="screen" width="1056" height="672" tabindex="0" aria-label="Apollo game screen. Arrow keys steer, Space is the button, B is the lower button, M shows the trip map, 1 to 8 pick a stage on the title screen, P pauses."></canvas>
           <div id="overlay" class="low">
@@ -262,27 +272,6 @@
             <button type="button" id="over-go">Play</button>
           </div>
         </div>
-        <div class="pad" aria-label="Hand controller">
-          <div class="side">
-            <button type="button" data-side="top" aria-label="Top side button">TOP</button>
-            <button type="button" data-side="lower" aria-label="Lower side button">LOWER</button>
-          </div>
-          <div class="face">
-            <div class="keys" role="group" aria-label="Keypad">
-              <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
-              <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
-              <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
-              <button type="button" data-key="clear" aria-label="Clear">CL</button><button type="button" data-key="0">0</button><button type="button" data-key="enter" aria-label="Enter">EN</button>
-            </div>
-            <p class="pad-note">Any key: trip map</p>
-            <div id="disc" role="application" aria-label="Disc: press and drag to steer"><span id="knob"></span></div>
-          </div>
-          <div class="side">
-            <button type="button" data-side="top" aria-label="Top side button">TOP</button>
-            <button type="button" data-side="lower" aria-label="Lower side button">LOWER</button>
-          </div>
-        </div>
-      </div>
       <div class="deck">
         <div class="group">
           <button type="button" id="b-new">New game</button>
@@ -299,6 +288,11 @@
         </div>
       </div>
       <p id="status" role="status">Arrow keys steer, <kbd>Space</kbd> is the button, <kbd>B</kbd> brakes when docking, <kbd>M</kbd> shows the trip map, <kbd>P</kbd> pauses.</p>
+        </div>
+        <div class="pad">
+{{pad_tall}}{{pad_wide}}          <p class="pad-note">On the title screen, 1 to 8 pick a stage. In flight, any key: trip map</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>

@@ -29,6 +29,7 @@ t = re.sub(r'\{\{img:([a-z0-9_]+)\}\}', lambda m: data_uri(m.group(1)), t)
 rom = base64.b64encode(open(os.path.join(HERE, '..', 'cockpit', 'cockpit.rom'), 'rb').read()).decode()
 inty = read('inty.js').replace("if (typeof module !== 'undefined') module.exports = { Inty, PAD, INTY_PALETTE, SCREEN_W, SCREEN_H };\n", '')
 t = t.replace('{{rom}}', rom).replace('{{inty}}', inty).replace('{{app}}', read('app.js'))
+t = t.replace('{{pad_tall}}', read('pad_tall.svg')).replace('{{pad_wide}}', read('pad_wide.svg'))
 assert '{{' not in t, t[t.index('{{'):][:60]
 MARK = '<!--PAGES_LINKS-->\n'
 LINKS = ('        <li><a href="https://github.com/Plicerin/apollo">Source code</a></li>\n'

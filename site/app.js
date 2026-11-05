@@ -156,7 +156,9 @@ class Sound {
   // A quick tap must still reach the game, which looks at the controller once a frame
   const MIN_HOLD = 3;
   const pressedAt = new Map(), letGo = new Set();
-  let pointerDisc = -1, heldSide = 0, heldKey = 0, padDisc = -1, padSide = 0;
+  let pointerDisc = -1, heldSide = 0, heldKey = 0, padDisc = -1, padSide = 0, tapCode = 0, tapUntil = 0;
+  // A quick tap on the drawn controller still lasts long enough for the game to see
+  function tap(code) { tapCode |= code; tapUntil = m.frame + MIN_HOLD; }
 
   function keyboardDisc() {
     const u = keys.has('ArrowUp') || keys.has('KeyW'), d = keys.has('ArrowDown') || keys.has('KeyS');
@@ -190,7 +192,8 @@ class Sound {
     if (keys.has('KeyB')) code |= PAD.lowerLeft;
     if (keys.has('KeyM')) code |= PAD.key[1];
     for (let n = 0; n < 10; n++) if (keys.has('Digit' + n) || keys.has('Numpad' + n)) code |= PAD.key[n];
-    code |= heldSide | heldKey | padSide;
+    if (m.frame >= tapUntil) tapCode = 0;
+    code |= heldSide | heldKey | padSide | tapCode;
     m.pads[1] = code;
     for (const k of letGo) {
       if (m.frame - (pressedAt.get(k) || 0) >= MIN_HOLD) { keys.delete(k); letGo.delete(k); }
@@ -236,7 +239,7 @@ class Sound {
     state = 'play';
     sound.clear();
     m.reset();
-    keys.clear(); letGo.clear(); heldSide = 0; heldKey = 0; pointerDisc = -1;
+    keys.clear(); letGo.clear(); heldSide = 0; heldKey = 0; pointerDisc = -1; tapCode = 0;
     fastForward(40);
     if (how === 'title') say('On the title screen. Press the button to start at Stage 1.');
     else if (how === 'demo') { fastForward(900); say('The demo pilot is flying. Press any button to take over at the title screen.'); }
@@ -306,32 +309,34 @@ class Sound {
   }
   $$('[data-side]').forEach(b => {
     const code = b.dataset.side === 'top' ? PAD.top : PAD.lowerLeft;
-    holdable(b, () => { heldSide |= code; }, () => { heldSide &= ~code; });
+    holdable(b, () => { heldSide |= code; tap(code); }, () => { heldSide &= ~code; });
   });
   $$('[data-key]').forEach(b => {
     const v = b.dataset.key;
     const code = v === 'clear' ? PAD.clear : v === 'enter' ? PAD.enter : PAD.key[+v];
-    holdable(b, () => { heldKey = code; }, () => { heldKey = 0; });
+    holdable(b, () => { heldKey = code; tap(code); }, () => { heldKey = 0; });
   });
-  const disc = $('#disc'), knob = $('#knob');
-  function discAt(e) {
-    const r = disc.getBoundingClientRect();
-    const dx = e.clientX - (r.left + r.width / 2), dy = (r.top + r.height / 2) - e.clientY;
-    const a = (Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI);
-    pointerDisc = Math.round(a / (Math.PI / 8)) % 16;
-    const k = pointerDisc * Math.PI / 8, rad = r.width * 0.3;
-    knob.style.transform = 'translate(' + (Math.cos(k) * rad).toFixed(1) + 'px,' + (-Math.sin(k) * rad).toFixed(1) + 'px)';
-  }
-  disc.addEventListener('pointerdown', e => {
-    e.preventDefault();
-    try { disc.setPointerCapture(e.pointerId); } catch (x) { /* ok */ }
-    disc.classList.add('down');
-    if (ensurePlaying()) discAt(e);
+  $$('[data-disc]').forEach(disc => {
+    const knob = disc.querySelector('.knob'), R = disc.querySelector('.hit').r.baseVal.value * 0.55;
+    function discAt(e) {
+      const r = disc.getBoundingClientRect();
+      const dx = e.clientX - (r.left + r.width / 2), dy = (r.top + r.height / 2) - e.clientY;
+      const a = (Math.atan2(dy, dx) + 2 * Math.PI) % (2 * Math.PI);
+      pointerDisc = Math.round(a / (Math.PI / 8)) % 16;
+      const k = pointerDisc * Math.PI / 8;
+      knob.setAttribute('transform', 'translate(' + (Math.cos(k) * R).toFixed(1) + ' ' + (-Math.sin(k) * R).toFixed(1) + ')');
+    }
+    disc.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      try { disc.setPointerCapture(e.pointerId); } catch (x) { /* ok */ }
+      disc.classList.add('down');
+      if (ensurePlaying()) discAt(e);
+    });
+    disc.addEventListener('pointermove', e => { if (disc.classList.contains('down')) discAt(e); });
+    const discEnd = () => { disc.classList.remove('down'); pointerDisc = -1; knob.removeAttribute('transform'); refocus(); };
+    disc.addEventListener('pointerup', discEnd);
+    disc.addEventListener('pointercancel', discEnd);
   });
-  disc.addEventListener('pointermove', e => { if (disc.classList.contains('down')) discAt(e); });
-  const discEnd = () => { disc.classList.remove('down'); pointerDisc = -1; knob.style.transform = ''; refocus(); };
-  disc.addEventListener('pointerup', discEnd);
-  disc.addEventListener('pointercancel', discEnd);
 
   // buttons
   btnPlay.addEventListener('click', () => { if (state === 'attract') begin('title'); else if (paused) { setPaused(false); canvas.focus({ preventScroll: true }); } });

@@ -19,5 +19,8 @@
 !site/template.html
 !site/build.py
 !site/make_art.py
+!site/make_pad.py
+!site/pad_tall.svg
+!site/pad_wide.svg
 !site/img/
 !site/img/*.png
