@@ -1,0 +1,523 @@
+<title>Apollo for Intellivision</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Apollo: an original Intellivision game. Fly to the Moon and back from the cockpit, in eight stages. Play it in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  /* Layout: a flight plan. The mission strip in the hero and the stage list below it run in order,
+     Earth to Moon to Earth, around the console that plays the real cartridge. */
+  :root {
+    color-scheme: dark;
+    --space: #050714;       /* the sky above the cockpit */
+    --panel: #0e1228;
+    --panel-2: #161b38;
+    --line: rgba(200, 208, 240, 0.14);
+    --fg: #eceff8;
+    --muted: #a0a8c2;
+    --cm: #c8c8c8;          /* the cockpit's grey, colour 8 */
+    --readout: #2fdc28;     /* the panel's green, colour 5, lifted for small text */
+    --prompt: #ffff01;      /* the prompt bar's yellow, colour 6 */
+    --fire: #ff7a2e;        /* re-entry, colour 2 lifted */
+    --blue: #1438f7;        /* Earth, colour 1 */
+    --sky: #7f96ff;         /* colour 1 lifted for text */
+    --gold: #c9a75b;        /* console trim */
+    --walnut: #2a1a10;      /* console case */
+    --walnut-2: #3a2517;
+    --pixel: 'Press Start 2P', ui-monospace, monospace;
+    --body: 'IBM Plex Sans', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--space); color: var(--fg); font: 17px/1.6 var(--body); }
+  a { color: var(--prompt); }
+  img { display: block; max-width: 100%; }
+  img.px { image-rendering: pixelated; }
+  .wrap { width: min(1140px, 100%); margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  :focus-visible { outline: 3px solid var(--prompt); outline-offset: 2px; }
+  kbd { font: 500 0.82em/1 var(--mono); background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 2px 6px; white-space: nowrap; }
+  code { font: 500 0.92em var(--mono); color: var(--readout); }
+
+  /* top bar */
+  .top { border-bottom: 1px solid var(--line); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; padding-block: 12px; flex-wrap: wrap; }
+  .brand { font: 13px/1 var(--pixel); color: var(--fg); text-decoration: none; letter-spacing: 3px; }
+  nav { display: flex; gap: 2px 16px; flex-wrap: wrap; }
+  nav a { font: 500 14px/2 var(--mono); color: var(--muted); text-decoration: none; }
+  nav a:hover { color: var(--prompt); }
+
+  /* hero */
+  .hero {
+    background-color: var(--space);
+    background-image:
+      radial-gradient(1px 1px at 12% 22%, #fff, transparent), radial-gradient(1px 1px at 31% 68%, #cfd6ff, transparent),
+      radial-gradient(1px 1px at 47% 14%, #fff, transparent), radial-gradient(2px 2px at 63% 52%, #fff, transparent),
+      radial-gradient(1px 1px at 78% 24%, #dfe4ff, transparent), radial-gradient(1px 1px at 91% 74%, #fff, transparent),
+      radial-gradient(1px 1px at 6% 80%, #fff, transparent), radial-gradient(1px 1px at 55% 88%, #cfd6ff, transparent);
+    background-size: 420px 300px;
+    padding-block: 40px 28px;
+  }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px 44px; align-items: end; }
+  .kicker { font: 10px/1.7 var(--pixel); color: var(--prompt); margin: 0 0 18px; letter-spacing: 1px; }
+  h1 { margin: 0; }
+  h1 img { width: 100%; height: auto; }
+  .lede { font-size: 19px; line-height: 1.55; margin: 0 0 20px; max-width: 32em; }
+  .cta { display: inline-block; font: 13px/1 var(--pixel); color: #0a0c1c; background: var(--prompt); padding: 15px 20px 14px; border-radius: 4px; text-decoration: none; box-shadow: 0 4px 0 #a39a00; }
+  .cta:hover { background: #fff; box-shadow: 0 4px 0 var(--cm); }
+  .cta:active { transform: translateY(3px); box-shadow: 0 1px 0 #a39a00; }
+  .facts { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 18px 0 0; padding: 0; list-style: none; font: 500 13px/1.7 var(--mono); color: var(--muted); }
+
+  .plan { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); margin: 36px 0 0; padding: 0; list-style: none; }
+  .plan a { display: block; position: relative; padding: 18px 8px 0 0; color: var(--fg); text-decoration: none; font-size: 14px; line-height: 1.3; border-top: 2px dotted var(--prompt); }
+  .plan a::before { content: attr(data-n); position: absolute; top: -13px; left: 0; width: 24px; height: 24px; display: grid; place-items: center; font: 9px/1 var(--pixel); color: #fff; background: var(--blue); border-radius: 50%; }
+  .plan li.moon a::before { background: var(--cm); color: #111; }
+  .plan a:hover { color: var(--prompt); }
+
+  /* console */
+  #play { padding-block: 12px 56px; }
+  .console { background: linear-gradient(180deg, var(--walnut-2), var(--walnut)); border: 1px solid #000; border-radius: 12px; padding: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 60px rgba(0, 0, 0, .55); scroll-margin-top: 12px; }
+  .bay { display: grid; grid-template-columns: minmax(0, 1fr) 216px; gap: 14px; align-items: stretch; }
+  .console { width: min(100%, calc((100vh - 150px) * 11 / 7 + 258px)); margin-inline: auto; }
+  .tube { position: relative; background: #000; border: 3px solid var(--gold); border-radius: 6px; overflow: hidden; }
+  #screen { display: block; width: 100%; height: auto; aspect-ratio: 11 / 7; cursor: pointer; touch-action: manipulation; }
+  #screen:focus-visible { outline: none; }
+  .tube:focus-within { border-color: #f1d48a; }
+  #overlay { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 6px; text-align: center; background: rgba(5, 7, 20, .78); padding: 16px; }
+  #overlay.low { inset: auto 0 0 0; grid-template-columns: minmax(0, 1fr) auto; justify-items: start; align-items: center; text-align: left; gap: 2px 16px; background: rgba(5, 7, 20, .9); padding: 10px 14px; }
+  #overlay.low #over-title, #overlay.low #over-text { grid-column: 1; }
+  #over-title { font: 12px/1.5 var(--pixel); margin: 0; color: var(--prompt); }
+  #over-text { margin: 0; color: var(--fg); font-size: 14px; line-height: 1.4; }
+  #overlay.low #over-go { grid-column: 2; grid-row: 1 / span 2; }
+  #over-go { font: 12px/1 var(--pixel); color: #0a0c1c; background: var(--prompt); border: 0; border-radius: 4px; padding: 13px 16px 12px; cursor: pointer; margin-top: 6px; box-shadow: 0 3px 0 #a39a00; }
+  #overlay.low #over-go { margin-top: 0; }
+
+  /* the hand controller */
+  .pad { display: grid; grid-template-columns: 22px minmax(0, 1fr) 22px; gap: 8px; background: linear-gradient(180deg, #171310, #0b0907); border: 1px solid var(--gold); border-radius: 12px; padding: 12px 6px; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .side { display: grid; grid-template-rows: 1fr 1fr; gap: 10px; }
+  .side button { background: linear-gradient(90deg, #4a4032, #2b241a); border: 1px solid #0007; border-radius: 4px; padding: 0; cursor: pointer; color: var(--gold); font: 9px/1 var(--mono); writing-mode: vertical-rl; }
+  .side button.down { background: var(--prompt); color: #000; }
+  .face { display: grid; gap: 10px; align-content: space-between; }
+  .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .keys button { font: 500 13px/1 var(--mono); color: #eee3c6; background: linear-gradient(180deg, #38302a, #1f1a15); border: 1px solid #000; border-radius: 3px; padding: 8px 0; cursor: pointer; }
+  .keys button.down { background: var(--gold); color: #000; }
+  #disc { position: relative; width: 100%; max-width: 148px; aspect-ratio: 1; justify-self: center; border-radius: 50%; background: radial-gradient(circle at 40% 34%, #e4c988, #a98a47 62%, #6d5729); border: 2px solid #000; cursor: pointer; touch-action: none; box-shadow: inset 0 0 0 7px rgba(0,0,0,.14); }
+  #disc::before, #disc::after { content: ""; position: absolute; left: 50%; top: 50%; background: rgba(0,0,0,.34); }
+  #disc::before { width: 2px; height: 76%; transform: translate(-50%, -50%); }
+  #disc::after { width: 76%; height: 2px; transform: translate(-50%, -50%); }
+  #knob { position: absolute; left: calc(50% - 11px); top: calc(50% - 11px); width: 22px; height: 22px; z-index: 1; border-radius: 50%; background: #1b1610; border: 2px solid #eed99f; }
+  #disc.down #knob { background: var(--prompt); }
+  .pad-note { margin: 0; text-align: center; font: 500 11px/1.3 var(--mono); color: var(--gold); }
+
+  .deck { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
+  .deck .group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .deck button { font: 500 13px/1 var(--mono); color: var(--fg); background: rgba(0, 0, 0, .35); border: 1px solid rgba(201, 167, 91, .55); border-radius: 4px; padding: 9px 11px; cursor: pointer; min-height: 36px; }
+  .deck button:hover { background: rgba(201, 167, 91, .22); }
+  .deck label { font: 500 13px/1 var(--mono); color: var(--gold); display: flex; align-items: center; gap: 8px; }
+  .deck input[type=range] { width: 90px; accent-color: var(--gold); }
+  .deck .num { min-width: 36px; padding-inline: 0; }
+  #status { margin: 12px 2px 0; font-size: 15px; color: #e6dcc6; min-height: 1.6em; }
+
+  /* sections */
+  section { padding-block: 48px; }
+  h2 { font: 20px/1.5 var(--pixel); margin: 0 0 8px; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0 0 28px; max-width: 42em; }
+  .rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-bottom: 36px; }
+  .rules h3 { font: 600 19px/1.3 var(--body); margin: 0 0 6px; }
+  .rules p { margin: 0; color: #d6dbea; }
+  .rules .tag { font: 500 13px/1 var(--mono); color: var(--readout); display: block; margin-bottom: 10px; }
+  .keymap { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .keymap th { text-align: left; font: 500 12px/1 var(--mono); color: var(--muted); padding: 0 12px 10px 0; border-bottom: 1px solid var(--line); }
+  .keymap td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .scroll-x { overflow-x: auto; }
+  .also { margin: 22px 0 0; color: #d6dbea; max-width: 44em; }
+
+  /* screens */
+  .scr { margin: 0; background: var(--cm); padding: 4px; border-radius: 3px; }
+  .scr img { width: 100%; height: auto; aspect-ratio: 11 / 7; }
+  figcaption { font-size: 14px; color: var(--muted); padding-top: 8px; line-height: 1.4; }
+
+  /* stages */
+  #stages { padding-block: 48px 16px; }
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 44px; align-items: center; padding-block: 34px; border-top: 1px solid var(--line); scroll-margin-top: 8px; }
+  .stage:nth-of-type(even) .scr { order: 2; }
+  .stage .num { font: 11px/1 var(--pixel); margin: 0 0 12px; color: var(--sky); }
+  .stage.moon .num { color: var(--cm); }
+  .stage h3 { font: 600 28px/1.15 var(--body); margin: 0 0 10px; text-wrap: balance; }
+  .stage p { margin: 0 0 12px; max-width: 34em; }
+  .do { margin: 0 0 14px; padding: 0; list-style: none; font-size: 16px; }
+  .do li { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; padding-block: 3px; }
+  .do b { font: 500 13px/1.9 var(--mono); color: var(--readout); }
+  .ends { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0 0 16px; padding: 0; list-style: none; font: 500 11px/1.3 var(--mono); }
+  .ends li { background: #3a0f08; color: #ffb79a; padding: 4px 7px; border-radius: 2px; text-transform: uppercase; letter-spacing: .3px; }
+  .ends .lbl { background: none; color: var(--muted); padding: 4px 4px 4px 0; text-transform: none; }
+  .fly { font: 500 14px/1 var(--mono); color: var(--prompt); background: none; border: 1px solid var(--prompt); border-radius: 4px; padding: 10px 13px; cursor: pointer; }
+  .fly:hover { background: var(--prompt); color: #000; }
+
+  /* cockpits */
+  .pits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; }
+  .pit h3 { font: 600 22px/1.2 var(--body); margin: 0 0 12px; }
+  .marked { position: relative; }
+  .pin { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; display: grid; place-items: center; background: var(--prompt); color: #000; font: 500 12px/1 var(--mono); border: 2px solid #000; border-radius: 50%; }
+  .legend { margin: 14px 0 0; padding: 0; list-style: none; font-size: 15px; display: grid; gap: 4px; }
+  .legend li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 6px; }
+  .legend b { font: 500 13px/1.7 var(--mono); color: var(--prompt); }
+
+  /* gallery */
+  .moments { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+  .moments figure { margin: 0; }
+
+  footer { border-top: 1px solid var(--line); padding-block: 40px 56px; font-size: 15px; color: #d6dbea; }
+  footer .wrap { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 32px; }
+  footer h3 { font: 600 17px/1.3 var(--body); margin: 0 0 8px; color: var(--fg); }
+  footer p { margin: 0 0 12px; max-width: 46em; }
+  footer ul { margin: 0; padding: 0; list-style: none; }
+  .small { color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: minmax(0, 1fr); }
+    .bay { grid-template-columns: minmax(0, 1fr); }
+    .console { width: 100%; }
+    .pad { grid-template-columns: 30px minmax(0, 1fr) 30px; padding: 12px 8px; }
+    .face { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
+    .keys { order: 1; }
+    #disc { order: 2; }
+    .pad-note { order: 3; grid-column: 1 / -1; }
+    .side button { font-size: 10px; }
+    .stage, .pits, .rules { grid-template-columns: minmax(0, 1fr); }
+    .stage:nth-of-type(even) .scr { order: 0; }
+    .moments { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    footer .wrap { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 640px) {
+    body { font-size: 16px; }
+    .plan { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 26px; }
+    .plan a { font-size: 13px; }
+    h2 { font-size: 16px; }
+    .stage h3 { font-size: 24px; }
+    #overlay.low { padding: 8px 10px; gap: 2px 10px; }
+    #over-title { font-size: 9px; }
+    #over-text { font-size: 12px; }
+    #over-go { font-size: 10px; padding: 10px 11px 9px; }
+    .console { padding: 8px; }
+    .moments { grid-template-columns: minmax(0, 1fr); }
+    .brand { font-size: 11px; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#play">APOLLO</a>
+    <nav aria-label="Sections">
+      <a href="#play">Play</a>
+      <a href="#how">How to play</a>
+      <a href="#stages">Stages</a>
+      <a href="#cockpits">Cockpits</a>
+      <a href="#moments">Moments</a>
+      <a href="https://plicerin.github.io/">All games</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div>
+        <p class="kicker">AN ORIGINAL INTELLIVISION GAME</p>
+        <h1><img class="px" src="{{img:wordmark}}" width="145" height="40" alt="Apollo"></h1>
+      </div>
+      <div>
+        <p class="lede">Fly to the Moon and back from the cockpit. You ride the rocket up, dock with the lander, set it down on the Moon, then come home through the fire. Every prompt is in plain English.</p>
+        <a class="cta" id="hero-play" href="#play">Play now</a>
+        <ul class="facts">
+          <li>Plays in your browser</li>
+          <li>Keyboard, gamepad or touch</li>
+        </ul>
+      </div>
+    </div>
+    <ol class="plan" aria-label="The eight stages">
+      <li><a href="#s1" data-n="1">Liftoff</a></li>
+      <li><a href="#s2" data-n="2">Leave Earth Orbit</a></li>
+      <li><a href="#s3" data-n="3">Dock With Lander</a></li>
+      <li class="moon"><a href="#s4" data-n="4">Brake At The Moon</a></li>
+      <li class="moon"><a href="#s5" data-n="5">Land On The Moon</a></li>
+      <li class="moon"><a href="#s6" data-n="6">Lift Off And Meet Up</a></li>
+      <li class="moon"><a href="#s7" data-n="7">Head Home</a></li>
+      <li><a href="#s8" data-n="8">Re-entry</a></li>
+    </ol>
+  </div>
+</div>
+
+<div id="play">
+  <div class="wrap">
+    <div class="console" id="player">
+      <div class="bay">
+        <div class="tube">
+          <canvas id="screen" width="1056" height="672" tabindex="0" aria-label="Apollo game screen. Arrow keys steer, Space is the button, B is the lower button, M shows the trip map, 1 to 8 pick a stage on the title screen, P pauses."></canvas>
+          <div id="overlay" class="low">
+            <p id="over-title">Ready when you are</p>
+            <p id="over-text">The demo pilot starts flying in a few seconds.</p>
+            <button type="button" id="over-go">Play</button>
+          </div>
+        </div>
+        <div class="pad" aria-label="Hand controller">
+          <div class="side">
+            <button type="button" data-side="top" aria-label="Top side button">TOP</button>
+            <button type="button" data-side="lower" aria-label="Lower side button">LOWER</button>
+          </div>
+          <div class="face">
+            <div class="keys" role="group" aria-label="Keypad">
+              <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+              <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+              <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+              <button type="button" data-key="clear" aria-label="Clear">CL</button><button type="button" data-key="0">0</button><button type="button" data-key="enter" aria-label="Enter">EN</button>
+            </div>
+            <p class="pad-note">Any key: trip map</p>
+            <div id="disc" role="application" aria-label="Disc: press and drag to steer"><span id="knob"></span></div>
+          </div>
+          <div class="side">
+            <button type="button" data-side="top" aria-label="Top side button">TOP</button>
+            <button type="button" data-side="lower" aria-label="Lower side button">LOWER</button>
+          </div>
+        </div>
+      </div>
+      <div class="deck">
+        <div class="group">
+          <button type="button" id="b-new">New game</button>
+          <button type="button" id="b-pause" aria-pressed="false">Pause</button>
+          <button type="button" id="b-demo">Watch the demo</button>
+        </div>
+        <div class="group" role="group" aria-label="Jump to a stage">
+          <span style="font:500 13px/1 var(--mono);color:var(--gold)">Stage</span>
+          <button type="button" class="num" data-stage="1">1</button><button type="button" class="num" data-stage="2">2</button><button type="button" class="num" data-stage="3">3</button><button type="button" class="num" data-stage="4">4</button><button type="button" class="num" data-stage="5">5</button><button type="button" class="num" data-stage="6">6</button><button type="button" class="num" data-stage="7">7</button><button type="button" class="num" data-stage="8">8</button>
+        </div>
+        <div class="group">
+          <button type="button" id="b-sound" aria-pressed="true">Sound on</button>
+          <label>Volume <input id="b-vol" type="range" min="0" max="100" value="70"></label>
+        </div>
+      </div>
+      <p id="status" role="status">Arrow keys steer, <kbd>Space</kbd> is the button, <kbd>B</kbd> brakes when docking, <kbd>M</kbd> shows the trip map, <kbd>P</kbd> pauses.</p>
+    </div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How to play</h2>
+    <p class="sub">The strip under the window always tells you what to do next. Between stages the trip map shows how far you've come.</p>
+    <div class="rules">
+      <div><span class="tag">DISC</span><h3>Hold your aim</h3><p>Steer so the green <code>&lt;&gt;</code> stays on the crosshair. Bumpy air and drift keep pushing it away. Stray too long and you lose course.</p></div>
+      <div><span class="tag">BUTTON</span><h3>Press when told</h3><p>The bar says when: <code>BUTTON: DROP STAGE!</code>, <code>BUTTON: BIG CHUTES</code>. Engine burns end on a meter, so stop the engine in the green.</p></div>
+      <div><span class="tag">KEYPAD</span><h3>Look at the map</h3><p>Any keypad key pauses the flight and shows where you are on the trip. Press a key again to carry on.</p></div>
+    </div>
+    <div class="scroll-x">
+      <table class="keymap">
+        <thead><tr><th scope="col">On the Intellivision</th><th scope="col">Keyboard</th><th scope="col">Gamepad</th><th scope="col">What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Disc</td><td><kbd>Arrows</kbd> or <kbd>WASD</kbd></td><td>Stick or D-pad</td><td>Steer</td></tr>
+          <tr><td>Top side button</td><td><kbd>Space</kbd> or <kbd>Enter</kbd></td><td>A</td><td>The button</td></tr>
+          <tr><td>Lower side button</td><td><kbd>B</kbd></td><td>B or X</td><td>Brake while docking</td></tr>
+          <tr><td>Keypad</td><td><kbd>M</kbd>, or <kbd>0</kbd> to <kbd>9</kbd></td><td>Y</td><td>Trip map. On the title screen, 1 to 8 pick a stage</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="also">Each stage you finish gets a rating: <code>ACE</code>, <code>GOOD</code> or <code>MADE IT</code>. If it goes wrong, the game says what happened and how to avoid it, for example <code>LOST COURSE</code> and <code>KEEP &lt;&gt; ON CROSS</code>, and the button tries again.</p>
+  </div>
+</section>
+
+<section id="stages">
+  <div class="wrap">
+    <h2>The eight stages</h2>
+    <p class="sub">The whole mission, in order. These are real screens, flown by the game's own demo pilot, and any stage can be flown on its own.</p>
+
+    <article class="stage" id="s1">
+      <figure class="scr"><img class="px" src="{{img:s1}}" width="352" height="224" alt="Command module cockpit at liftoff, with the launch tower sliding past the right-hand window"></figure>
+      <div>
+        <p class="num">STAGE 1 OF 8</p>
+        <h3>Liftoff</h3>
+        <p>Ride the rocket into orbit around Earth. The blue sky goes black as you climb.</p>
+        <ul class="do"><li><b>DISC</b><span>Keep the green &lt;&gt; on the crosshair.</span></li><li><b>BUTTON</b><span>Light the engines, drop each empty stage and the tower, then stop the engine in the green.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Stage 1 not dropped</li><li>Stage 2 not dropped</li><li>Missed engine stop</li><li>Lost course</li></ul>
+        <button type="button" class="fly" data-stage="1">Fly Stage 1</button>
+      </div>
+    </article>
+
+    <article class="stage" id="s2">
+      <figure class="scr"><img class="px" src="{{img:s2}}" width="352" height="224" alt="Earth's blue horizon below the cockpit windows, with speed climbing past 18,000 miles an hour"></figure>
+      <div>
+        <p class="num">STAGE 2 OF 8</p>
+        <h3>Leave Earth Orbit</h3>
+        <p>Fire the engine to break out of orbit toward the Moon. Earth falls away below the windows.</p>
+        <ul class="do"><li><b>DISC</b><span>Keep &lt;&gt; on the crosshair.</span></li><li><b>BUTTON</b><span>Light the engine when told, then stop it in the green.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Missed the burn</li><li>Missed engine stop</li><li>Lost course</li></ul>
+        <button type="button" class="fly" data-stage="2">Fly Stage 2</button>
+      </div>
+    </article>
+
+    <article class="stage" id="s3">
+      <figure class="scr"><img class="px" src="{{img:s3}}" width="352" height="224" alt="The lander filling the window at the moment of docking"></figure>
+      <div>
+        <p class="num">STAGE 3 OF 8</p>
+        <h3>Dock With Lander</h3>
+        <p>The lander rides on the rocket. Separate, turn round and pick it up nose-on.</p>
+        <ul class="do"><li><b>DISC</b><span>Keep &lt;&gt; on the crosshair.</span></li><li><b>TOP</b><span>Speed up.</span></li><li><b>LOWER</b><span>Brake (<kbd>B</kbd> on a keyboard). Touch at 1.0 feet a second or less.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Too many bumps</li><li>Drifted away</li><li>Lost course</li></ul>
+        <button type="button" class="fly" data-stage="3">Fly Stage 3</button>
+      </div>
+    </article>
+
+    <article class="stage moon" id="s4">
+      <figure class="scr"><img class="px" src="{{img:s4}}" width="352" height="224" alt="Earth rising over the Moon's horizon in the right-hand window, with the prompt EARTHRISE"></figure>
+      <div>
+        <p class="num">STAGE 4 OF 8</p>
+        <h3>Brake At The Moon</h3>
+        <p>Turn the engine first. Behind the Moon you lose the radio, so you brake alone, with craters streaming past. Get it right and Earth rises in the window.</p>
+        <ul class="do"><li><b>DISC</b><span>Keep &lt;&gt; on the crosshair.</span></li><li><b>BUTTON</b><span>Turn, light the engine, then stop it in the green.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Did not turn around</li><li>Missed the burn</li><li>Flew past the Moon</li><li>Hit the Moon</li><li>Lost course</li></ul>
+        <button type="button" class="fly" data-stage="4">Fly Stage 4</button>
+      </div>
+    </article>
+
+    <article class="stage moon" id="s5">
+      <figure class="scr"><img class="px" src="{{img:s5}}" width="352" height="224" alt="Lander cockpit a few dozen feet above the Moon, with the blue X on the crosshair and the prompt DUST, STAY ON THE X"></figure>
+      <div>
+        <p class="num">STAGE 5 OF 8</p>
+        <h3>Land On The Moon</h3>
+        <p>A new cockpit, with a triangle window and Earth up in the corner. Clear the alarm, steer clear of the boulders, and at 400 feet the landing is yours.</p>
+        <ul class="do"><li><b>DISC</b><span>Keep the X on the crosshair.</span></li><li><b>BUTTON</b><span>Hold to slow your fall. Touch down gently, before the fuel runs out.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Hit too hard</li><li>Landed on rocks</li><li>Out of fuel</li><li>Lost course</li></ul>
+        <button type="button" class="fly" data-stage="5">Fly Stage 5</button>
+      </div>
+    </article>
+
+    <article class="stage moon" id="s6">
+      <figure class="scr"><img class="px" src="{{img:s6}}" width="352" height="224" alt="The mother ship through the lander's overhead window, closing in for docking"></figure>
+      <div>
+        <p class="num">STAGE 6 OF 8</p>
+        <h3>Lift Off And Meet Up</h3>
+        <p>The mother ship is coming overhead. Go when told, climb to orbit, then look up through the top window and bring the two ships together.</p>
+        <ul class="do"><li><b>DISC</b><span>Aim &lt;&gt;.</span></li><li><b>BUTTON</b><span>Lift off, stop the engine in the green, then tap to move in.</span></li><li><b>LOWER</b><span>Hold to slow down.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Missed the ship</li><li>Missed engine stop</li><li>Too many bumps</li><li>Drifted away</li><li>Lost course</li></ul>
+        <button type="button" class="fly" data-stage="6">Fly Stage 6</button>
+      </div>
+    </article>
+
+    <article class="stage moon" id="s7">
+      <figure class="scr"><img class="px" src="{{img:s7}}" width="352" height="224" alt="Earth with North America in view, framed in the command module's left window"></figure>
+      <div>
+        <p class="num">STAGE 7 OF 8</p>
+        <h3>Head Home</h3>
+        <p>Behind the Moon again, with no radio. Fire the engine for home, then watch Earth grow in the window as you coast back.</p>
+        <ul class="do"><li><b>DISC</b><span>Aim &lt;&gt;, then aim at Earth.</span></li><li><b>BUTTON</b><span>Light the engine and stop it in the green. If you drift, hold the button and let go when the needle is in the green.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Missed the burn</li><li>Missed engine stop</li><li>Lost course</li></ul>
+        <button type="button" class="fly" data-stage="7">Fly Stage 7</button>
+      </div>
+    </article>
+
+    <article class="stage" id="s8">
+      <figure class="scr"><img class="px" src="{{img:s8}}" width="352" height="224" alt="Fire filling both windows during re-entry, with the angle meter below"></figure>
+      <div>
+        <p class="num">STAGE 8 OF 8</p>
+        <h3>Re-entry</h3>
+        <p>Hit the air at the right angle. Too steep and you burn up. Too flat and you skip back into space. Then the radio comes back, the chutes open, and you land in the sea.</p>
+        <ul class="do"><li><b>DISC</b><span>Keep the needle in the green.</span></li><li><b>BUTTON</b><span>Drop the engines, then small chutes, then big chutes, when the bar says.</span></li></ul>
+        <ul class="ends"><li class="lbl">Ends in</li><li>Engines not dropped</li><li>Burned up</li><li>Skipped off the air</li><li>No chutes opened</li></ul>
+        <button type="button" class="fly" data-stage="8">Fly Stage 8</button>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="cockpits">
+  <div class="wrap">
+    <h2>Two cockpits</h2>
+    <p class="sub">The mother ship and the lander are different places to sit, with different windows and different dials. The game explains each one the first time you use it.</p>
+    <div class="pits">
+      <div class="pit">
+        <h3>The mother ship</h3>
+        <div class="marked">
+          <figure class="scr"><img class="px" src="{{img:cm}}" width="352" height="224" alt="Command module cockpit with two windows, in bumpy air during liftoff"></figure>
+          <span class="pin" style="left:12%;top:20%">1</span>
+          <span class="pin" style="left:96%;top:54%">2</span>
+          <span class="pin" style="left:4%;top:68%">3</span>
+          <span class="pin" style="left:33%;top:62%">4</span>
+          <span class="pin" style="left:69%;top:60%">5</span>
+          <span class="pin" style="left:96%;top:68%">6</span>
+          <span class="pin" style="left:50%;top:96%">7</span>
+        </div>
+        <ul class="legend">
+          <li><b>1</b><span>Two windows. Your aim marks are in the left one.</span></li>
+          <li><b>2</b><span>The prompt: what to do right now.</span></li>
+          <li><b>3</b><span>The ball: nose up or down.</span></li>
+          <li><b>4</b><span>The dial: G, the push in your seat.</span></li>
+          <li><b>5</b><span>Height, speed and the clock.</span></li>
+          <li><b>6</b><span>Lights: do it now. Red is the alarm lamp.</span></li>
+          <li><b>7</b><span>The line: your whole trip, from Earth to Moon.</span></li>
+        </ul>
+      </div>
+      <div class="pit">
+        <h3>The lander</h3>
+        <div class="marked">
+          <figure class="scr"><img class="px" src="{{img:lm}}" width="352" height="224" alt="Lander cockpit near the Moon, with a triangle window frame and the prompt YOU FLY, HOLD EQUALS SLOW"></figure>
+          <span class="pin" style="left:6%;top:30%">1</span>
+          <span class="pin" style="left:64%;top:44%">2</span>
+          <span class="pin" style="left:4%;top:68%">3</span>
+          <span class="pin" style="left:45%;top:62%">4</span>
+          <span class="pin" style="left:55%;top:62%">5</span>
+          <span class="pin" style="left:97%;top:68%">6</span>
+        </div>
+        <ul class="legend">
+          <li><b>1</b><span>The window, and the X to land on.</span></li>
+          <li><b>2</b><span>Warning lights: low fuel, and contact with the ground.</span></li>
+          <li><b>3</b><span>Drift: which way you are sliding.</span></li>
+          <li><b>4</b><span>Tape A is height. Tape D is fall speed.</span></li>
+          <li><b>5</b><span>The dial.</span></li>
+          <li><b>6</b><span>Height, fall speed, forward speed, and fuel.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="moments">
+  <div class="wrap">
+    <h2>Worth the trip</h2>
+    <p class="sub">A few things you only see by getting there.</p>
+    <div class="moments">
+      <figure><div class="scr"><img class="px" src="{{img:map}}" width="352" height="224" alt="The trip map, with Earth and North America on the left, the Moon on the right, and the yellow path flown so far"></div><figcaption>The trip map, on the way home.</figcaption></figure>
+      <figure><div class="scr"><img class="px" src="{{img:craters}}" width="352" height="224" alt="Grey lunar surface and craters in both windows"></div><figcaption>Braking low over the craters, with no radio.</figcaption></figure>
+      <figure><div class="scr"><img class="px" src="{{img:base}}" width="352" height="224" alt="Two astronauts and a flag beside the lander on the Moon, with the words Welcome to Tranquility Base"></div><figcaption>Tranquility Base, after a good landing.</figcaption></figure>
+      <figure><div class="scr"><img class="px" src="{{img:s4}}" width="352" height="224" alt="Earth rising over the Moon"></div><figcaption>Earthrise, from Moon orbit.</figcaption></figure>
+      <figure><div class="scr"><img class="px" src="{{img:chutes}}" width="352" height="224" alt="Three parachutes opening against the blue sky above the cockpit windows"></div><figcaption>Three big chutes open.</figcaption></figure>
+      <figure><div class="scr"><img class="px" src="{{img:sea}}" width="352" height="224" alt="The capsule in the sea near a ship, with a helicopter overhead and the words Splashdown, Welcome Home"></div><figcaption>Splashdown. Welcome home.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <h3>About the cartridge</h3>
+      <p>Apollo is a real Intellivision program, written in IntyBASIC. The cartridge holds about 42,000 words, with about 1,200 still free. It runs in the jzIntv emulator and hasn't been tried on real hardware yet. With the ECS plugged in, steering gets its own sound on the second sound chip.</p>
+      <p>On this page the same cartridge image runs on a small emulator written for this game: a CP-1610 CPU, the STIC picture chip and both sound chips. It uses no Mattel code, so the letters are a stand-in character set. It has no Intellivoice either, so the game's spoken callouts, like "the Eagle has landed", are only heard in jzIntv.</p>
+      <p class="small">Not affiliated with NASA or Mattel. Intellivision is a trademark of its owner.</p>
+    </div>
+    <div>
+      <h3>Links</h3>
+      <ul>
+        <li><a href="https://plicerin.github.io/">All games</a></li>
+<!--PAGES_LINKS-->
+        <li><a href="https://plicerin.github.io/toywars/">Toy Wars</a></li>
+        <li><a href="https://plicerin.github.io/Swords-and-Serpents/">Swords &amp; Serpents</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>window.APOLLO_ROM = "{{rom}}";</script>
+<script>
+{{inty}}
+{{app}}
+</script>

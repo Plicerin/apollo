@@ -1,0 +1,8 @@
+; Apollo: extra PC keys on top of jzIntv's defaults
+; (arrows = disc, Right Shift = button, numpad = keypad still work)
+MAP 0
+SPACE      PD0L_A_T   ; Space = side button
+RETURN     PD0L_A_T   ; Enter = side button
+B          PD0L_A_L   ; B = lower side button (brake when docking)
+M          PD0L_KP1   ; M = a keypad key = trip map
+TAB        PD0L_KP1   ; Tab = trip map too

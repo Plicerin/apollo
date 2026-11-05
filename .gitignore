@@ -1,0 +1,23 @@
+# Only what the game and its page need. The first text prototype, third-party
+# files and build output stay local.
+*
+!.gitignore
+!README.md
+!/index.html
+!cockpit/
+!cockpit/cockpit.bas
+!cockpit/ascent.bas
+!cockpit/clips.bas
+!cockpit/gen_gfx.py
+!cockpit/gfx.bas
+!cockpit/gfx_const.bas
+!cockpit/apollo.kbd
+!cockpit/cockpit.rom
+!site/
+!site/inty.js
+!site/app.js
+!site/template.html
+!site/build.py
+!site/make_art.py
+!site/img/
+!site/img/*.png
