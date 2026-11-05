@@ -492,7 +492,7 @@ fly_down: PROCEDURE
 			END IF
 		ELSEIF ev = 6 OR ev = 8 THEN
 			IF press THEN
-				ev = ev + 1: #ts = 0: sub = 0: bn = 6: shk = 15: g10 = 30: #tv = 32: msg = 75
+				ev = ev + 1: #ts = 0: sub = 0: bn = 6: shk = 15: g10 = 30: #tv = 32: msg = 75: cdf = 1
 				IF ev = 7 THEN #tv = 260: msg = 78
 			ELSEIF #ts > #dl THEN
 				fr = 19: RETURN
@@ -556,7 +556,11 @@ fly_down: PROCEDURE
 			DEFINE 0, 1, VARPTR flame_f(eo * 4)
 		ELSEIF cdf THEN
 			cdf = 0
-			IF ev >= 5 THEN DEFINE C_TWR, 2, chute_c
+			IF ev >= 9 THEN
+				DEFINE C_TWR, 2, chute_c
+			ELSEIF ev >= 5 THEN
+				DEFINE C_TWR, 2, drogue_c
+			END IF
 		ELSE
 			GOSUB gram_tick
 		END IF
@@ -580,21 +584,26 @@ fly_zero: PROCEDURE
 	END
 
 	' Stage 8's sprites over place_sprites': a bold crosshair and <> that
-	' show up against the fire, then two small chutes or three big ones,
-	' swaying, with no aim marks
+	' show up against the fire, then two small chutes or three big ones on one fan of lines,
+	' swaying together, with no aim marks
 down_sprites: PROCEDURE
 	IF ev >= 5 THEN
 		SPRITE 0, 0: SPRITE 1, 0
 		IF ev < 7 THEN RETURN
-		i = (FRAME / 32) AND 1
+		' The fan of lines, then the canopies on top of it, swaying as one
+		#k = 48 + ((FRAME / 32) AND 1) + ox + VISIBLE + ZOOMX2
+		#p = 17 + oy + ZOOMY4
+		#d = 33 + oy + ZOOMY4
+		SPRITE 0, #k - 16, #d + FLIPX, GR + (C_TWR + 1) * 8 + SPR_WHITE
+		SPRITE 1, #k, #d, GR + (C_TWR + 1) * 8 + SPR_WHITE
 		IF ev < 9 THEN
-			#k = ZOOMY2: #p = VISIBLE
+			SPRITE 2, #k - 16, #p, GR + C_TWR * 8 + SPR_ORANGE
+			SPRITE 3, #k, #p, GR + C_TWR * 8 + SPR_WHITE
 		ELSE
-			#k = ZOOMY2 + DOUBLEY: #p = VISIBLE + ZOOMX2
-			SPRITE 4, 116 + i + #p, 18 + oy + #k, GR + BEHIND + C_TWR * 8 + SPR_ORANGE
+			SPRITE 2, #k - 24, #p, GR + C_TWR * 8 + SPR_ORANGE
+			SPRITE 3, #k - 8, #p, GR + C_TWR * 8 + SPR_WHITE
+			SPRITE 4, #k + 8, #p, GR + C_TWR * 8 + SPR_ORANGE
 		END IF
-		SPRITE 2, 30 + i + #p, 18 + oy + #k, GR + BEHIND + C_TWR * 8 + SPR_ORANGE
-		SPRITE 3, 56 - i + #p, 18 + oy + #k, GR + BEHIND + C_TWR * 8 + SPR_WHITE
 		RETURN
 	END IF
 	IF #sky = BG_BLACK THEN
@@ -1272,7 +1281,7 @@ results: PROCEDURE
 	END
 
 	REM ===================== STAGE 6: LIFT OFF AND MEET UP ===
-	' Wait on the Moon for the mother ship to come overhead, lift off when
+	' Wait on the Moon for the Command Module to come overhead, lift off when
 	' told, hold the aim up to orbit, stop in the green, then look up through
 	' the overhead window: slow down and dock. ev (shared with place_lm's
 	' meanings): 5 on the Moon, 1 climbing, 6 coasting, 7 docking, 8 docked.
@@ -1444,7 +1453,7 @@ fly_up: PROCEDURE
 			END IF
 		END IF
 
-		' The mother ship's size from the gap
+		' The Command Module's size from the gap
 		#k = #alt + 57: #d = 1824 / #k
 		IF #d < 6 THEN
 			n = 0
@@ -1635,7 +1644,7 @@ fly_tli: PROCEDURE
 	WEND
 	END
 
-	REM ===================== STAGE 3: DOCK WITH LANDER =======
+	REM ===================== STAGE 3: DOCK WITH THE LM =======
 	' The lander rides on top of the rocket. Separate, turn round (the
 	' Earth swings through the window), then close in on the lander
 	' nose-on: the disc keeps its docking target on the crosshair, the top
@@ -2773,7 +2782,7 @@ txt:
 	DATA "ON THE LAUNCH PAD   "
 	DATA "LIFTOFF             "
 	DATA "LEAVE EARTH ORBIT   "
-	DATA "DOCK WITH LANDER    "
+	DATA "DOCK WITH THE LM    "
 	DATA "BRAKE AT THE MOON   "
 	DATA "LAND ON THE MOON    "
 	DATA "LIFT OFF AND MEET UP"
@@ -2868,7 +2877,7 @@ v_lowfuel:	VOICE LL, OW, PA2, FF, YY2, UW2, EL, PA1, 0
 v_youfly:	VOICE YY2, UW2, PA2, FF, LL, AY, PA1, 0
 v_contact:	VOICE KK3, AA, NN1, PA1, TT2, AE1, KK2, PA1, TT2, PA2, LL, AY, PA1, TT2, PA1, 0
 v_base:	VOICE WW, EH, EH, LL, PA1, KK1, AX, MM, PA2, TT2, UW2, PA2, TT2, RR1, AE1, NG1, KK1, WH, IH, LL, IH, TT2, IY, PA2, BB2, EY, SS, PA1, 0
-v_ship:	VOICE SH, IH, PP, PA2, AX, HH1, EH, EH, DD1, PA1, 0
+v_ship:	VOICE MM, AA, PA1, JH, UW2, EL, PA2, AX, HH1, EH, EH, DD1, PA1, 0
 v_home:	VOICE WW, IY, PA2, AR, PA2, GG1, OW, IH, NG1, PA2, HH1, OW, MM, PA1, 0
 v_fix:	VOICE KK3, OR2, SS, PA2, KK1, ER1, EH, KK2, SH, AX, NN1, PA1, 0
 v_lined:	VOICE LL, AY, NN1, DD1, PA2, AX, PP, PA1, 0
@@ -3004,11 +3013,18 @@ sea_scene: PROCEDURE
 		IF cel THEN GOSUB cheer
 		SPRITE 1, 72 + VISIBLE + ZOOMX2, y + 16 + ZOOMY2, GR + 13 * 8 + SPR_WHITE
 		IF cn < 70 THEN
-			SPRITE 2, 55 + VISIBLE + ZOOMX2, cn + ZOOMY2 + DOUBLEY, GR + 16 * 8 + SPR_ORANGE
-			SPRITE 3, 72 + VISIBLE + ZOOMX2, cn + ZOOMY2 + DOUBLEY, GR + 18 * 8 + SPR_WHITE
-			SPRITE 4, 89 + VISIBLE + ZOOMX2, cn + ZOOMY2 + DOUBLEY + FLIPX, GR + 16 * 8 + SPR_ORANGE
+			SPRITE 2, 56 + VISIBLE + ZOOMX2, cn - 16 + ZOOMY4, GR + 16 * 8 + SPR_ORANGE
+			SPRITE 3, 72 + VISIBLE + ZOOMX2, cn - 16 + ZOOMY4, GR + 16 * 8 + SPR_WHITE
+			SPRITE 4, 88 + VISIBLE + ZOOMX2, cn - 16 + ZOOMY4, GR + 16 * 8 + SPR_ORANGE
+			' The lines meet on top of the capsule until it hits the water
+			IF #tv < 280 THEN
+				SPRITE 0, 64 + VISIBLE + ZOOMX2, cn + ZOOMY4 + FLIPX, GR + 17 * 8 + SPR_WHITE
+				SPRITE 7, 80 + VISIBLE + ZOOMX2, cn + ZOOMY4, GR + 17 * 8 + SPR_WHITE
+			ELSE
+				SPRITE 0, 0: SPRITE 7, 0
+			END IF
 		ELSE
-			SPRITE 2, 0: SPRITE 3, 0: SPRITE 4, 0
+			SPRITE 2, 0: SPRITE 3, 0: SPRITE 4, 0: SPRITE 0, 0: SPRITE 7, 0
 		END IF
 		IF #tv >= 340 THEN
 			IF x > 96 AND (#tv AND 7) = 0 THEN x = x - 1
@@ -3335,7 +3351,7 @@ text_res:
 	DATA "  STAY OVER THE X   "
 	DATA "  OUT OF FUEL       "
 	DATA "  LAND SOONER       "
-	DATA "  MISSED THE SHIP   "
+	DATA "  MISSED RENDEZVOUS "
 	DATA " LIFT OFF WHEN TOLD "
 	DATA " ENGINES NOT DROPPED"
 	DATA "PRESS BUTTON IN TIME"
@@ -3349,13 +3365,13 @@ text_res:
 	DATA "   117 MILES UP     "
 	DATA " LEFT EARTH ORBIT!  "
 	DATA " 3 DAYS TO THE MOON "
-	DATA "DOCKED WITH LANDER! "
+	DATA "LUNAR MODULE DOCKED!"
 	DATA "                    "
 	DATA "   IN MOON ORBIT!   "
 	DATA "  70 MILES ABOVE    "
 	DATA "    ON THE MOON!    "
 	DATA "                    "
-	DATA "MET THE MOTHER SHIP!"
+	DATA "MET COMMAND MODULE! "
 	DATA "                    "
 	DATA "  HEADED FOR HOME!  "
 	DATA " RE-ENTRY IS NEXT   "
@@ -3394,10 +3410,10 @@ text_msg:
 	DATA "TAP BUTTON: MOVE IN "
 	DATA "TOO FAST! B = BRAKE "
 	DATA "GOOD SPEED: AIM <>  "
-	DATA "DOCKED! LANDER HELD "
+	DATA "DOCKED! LM HELD     "
 	DATA "BUMP! COME IN SLOWER"
 	DATA "MISSED! LINE UP <>  "
-	DATA "PULLING LANDER FREE "
+	DATA "PULLING THE LM FREE "
 	DATA "BUTTON: TURN AROUND "
 	DATA "TURNING ENGINE FIRST"
 	DATA "MOON AHEAD: AIM <>  "
@@ -3420,12 +3436,12 @@ text_msg:
 	DATA "THE EAGLE HAS LANDED"
 	DATA "5/8 LANDING         "
 	DATA "6/8 LIFT OFF        "
-	DATA "MOTHER SHIP COMING  "
+	DATA "COMMAND MODULE IN   "
 	DATA "CLIMBING: HOLD AIM! "
 	DATA "ENGINE OFF: COASTING"
-	DATA "MOTHER SHIP AHEAD!  "
+	DATA "COMMAND MODULE AHEAD"
 	DATA "DOCKED! ALL TOGETHER"
-	DATA "LANDER LEFT BEHIND  "
+	DATA "LM LEFT BEHIND      "
 	DATA "    PRESS BUTTON    "
 	DATA "     WELCOME TO     "
 	DATA "  TRANQUILITY BASE  "
@@ -3485,11 +3501,11 @@ text_page:
 	DATA "ENGINE, THEN STOP IT"
 	DATA "IN THE GREEN.       "
 	DATA "    STAGE 3 OF 8    "
-	DATA "  DOCK WITH LANDER  "
+	DATA "  DOCK WITH THE LM  "
 	DATA "                    "
-	DATA "THE LANDER RIDES ON "
-	DATA "THE ROCKET. TURN AND"
-	DATA "PICK IT UP NOSE-ON. "
+	DATA "LUNAR MODULE (LM) IS"
+	DATA "ON THE ROCKET. TURN "
+	DATA "AND GET IT NOSE-ON. "
 	DATA "DISC: KEEP <> ON THE"
 	DATA "CROSSHAIR.          "
 	DATA "TOP BUTTON: SPEED UP"
@@ -3509,7 +3525,7 @@ text_page:
 	DATA "    STAGE 5 OF 8    "
 	DATA "  LAND ON THE MOON  "
 	DATA "                    "
-	DATA "THE LANDER COCKPIT: "
+	DATA "LUNAR MODULE COCKPIT"
 	DATA "TAPE A = HEIGHT,    "
 	DATA "TAPE D = FALL SPEED."
 	DATA "DISC: KEEP THE X ON "
@@ -3520,8 +3536,8 @@ text_page:
 	DATA "    STAGE 6 OF 8    "
 	DATA "LIFT OFF AND MEET UP"
 	DATA "                    "
-	DATA "THE MOTHER SHIP IS  "
-	DATA "COMING OVERHEAD. GO "
+	DATA "THE COMMAND MODULE  "
+	DATA "COMES OVERHEAD. GO  "
 	DATA "WHEN TOLD. AIM <>.  "
 	DATA "CLIMB TO ORBIT, STOP"
 	DATA "THE ENGINE IN GREEN."

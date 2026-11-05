@@ -417,7 +417,7 @@ def lm_frame(D):
 lm_f = [c for D in LM_SIZES for c in lm_frame(D)]
 
 
-# Stage 6 target: the mother ship nose-on, a grey disc with four thruster
+# Stage 6 target: the Command Module nose-on, a grey disc with four thruster
 # blocks and a dark docking hub so the crosshair and <> stand out against it.
 def cm_frame(D):
     r = D / 2 * .86
@@ -685,10 +685,16 @@ assert 16 < len(base_c) <= 28, ('lander card count', len(base_c))
 FLAME = ['X......X', 'X..X...X', '...X....', '...X.X..', '.....X..', '.X...X..', '.X......', '.X....X.']
 flame_f = [card([FLAME[(r + s * 2) % 8] for r in range(8)]) for s in range(4)]
 
-# Chute seen from below the canopy: canopy, then lines coming together
-chute_mid = [card(['..XXXX..', '.XXXXXX.', 'XXXXXXXX', 'XXXXXXXX', 'XXXXXXXX', 'X.X..X.X', 'X.X..X.X', '.X.XX.X.']),
-             card(['.X.XX.X.', '.X.XX.X.', '..X..X..', '..X..X..', '..X..X..', '...XX...', '...XX...', '...XX...'])]
-chute_c = chute_mid
+# Chutes. One canopy card, used three times, and one card of lines for the right
+# half of the fan (flipped for the left half), so every line comes down to one
+# point. Cards are 8 x 8 pixels drawn double size; canopies sit 16 wide, side by
+# side, with the fan's lines reaching the middle canopy's edge and the side
+# canopies' centres.
+chute_c = [card(['........', '........', '..XXXX..', '.XXXXXX.', 'XXXXXXXX', 'XX.XX.XX', 'XX.XX.XX', 'X..XX..X']),
+           card(['...X...X', '...X..X.', '..X..X..', '..X.X...', '.X.X....', '.XX.....', 'XX......', 'X.......'])]
+# The two small chutes first: a smaller canopy, one line a side
+drogue_c = [card(['........', '........', '..XXXX..', '.XXXXXX.', 'XXXXXXXX', '.X.XX.X.', '...XX...', '...XX...']),
+            card(['...X....', '...X....', '..X.....', '..X.....', '.X......', '.X......', 'X.......', 'X.......'])]
 
 # Splashdown: all at GRAM 10 up, in this order
 wave_f = [card(['........', '..XX....', '.X..X...', '........', '......XX', '.....X..', '........', '........']),
@@ -703,19 +709,17 @@ heli_f = [card(['XXXXXXXX', '...XX...', '..XXXX..', '.XXXXXXX', 'XXXXX..X', '.XX
           card(['...XX...', '...XX...', '..XXXX..', '.XXXXXXX', 'XXXXX..X', '.XXXX...', '..X..X..', '.XXXXXX.'])]
 capsule = card(['...XX...', '...XX...', '..XXXX..', '..XXXX..', '.XXXXXX.', '.XXXXXX.', 'XXXXXXXX', 'XXXXXXXX'])
 spray = card(['X..X..X.', '.X.X.X..', '..XXX..X', 'X.XXX.X.', '.XXXXX..', 'XXXXXXXX', '.XXXXXX.', '........'])
-chute_l = [card(['..XXXX..', '.XXXXXX.', 'XXXXXXXX', 'XXXXXXXX', 'XXXXXXXX', 'X.X.X..X', '.X.X.X..', '.X.X..X.']),
-           card(['..X.X..X', '..X..X.X', '...X.X.X', '...X..XX', '....X.XX', '.....XXX', '......XX', '.......X'])]
 ship_c = [card(['........', '........', '........', '........', '........', 'XXXXXXXX', '.XXXXXXX', '..XXXXXX']),
           card(['........', '...X....', '...XX...', '..XXXX..', '..XXXX..', 'XXXXXXXX', 'XXXXXXXX', 'XXXXXXXX']),
           card(['........', '........', '........', '........', '........', 'XXXXXXXX', 'XXXXXXXX', 'XXXXXXX.'])]
 cloud_c = [card(['........', '...XX...', '..XXXX.X', '.XXXXXXX', 'XXXXXXXX', 'XXXXXXXX', '.XXXXXX.', '........']),
            card(['........', '........', 'XX......', 'XXXX....', 'XXXXXX..', 'XXXXXXX.', 'XXXXX...', '........'])]
-# 10-11 waves, 12 helicopter, 13 capsule, 14 spray, 15 unused, 16-17 side chute,
-# 18-19 middle chute, 20-22 ship, 23-24 cloud
-sea_c = wave_f[:2] + [heli_f[0], capsule, spray, card(['........'] * 8)] + chute_l + chute_mid + ship_c + cloud_c
+# 10-11 waves, 12 helicopter, 13 capsule, 14 spray, 15 unused, 16 canopy, 17 fan of
+# lines, 18-20 ship, 21-22 cloud
+sea_c = wave_f[:2] + [heli_f[0], capsule, spray, card(['........'] * 8)] + chute_c + ship_c + cloud_c
 SEA_ROW = 7
-sea_bt = [(SEA_ROW * 20 + 4 + i, '$0800 + {} * 8 + FG_BLACK + BG_CYAN'.format(20 + i)) for i in range(3)]
-for pos, cn in ((5 * 20 + 2, 23), (5 * 20 + 3, 24), (4 * 20 + 14, 23), (4 * 20 + 15, 24), (6 * 20 + 16, 23), (6 * 20 + 17, 24)):
+sea_bt = [(SEA_ROW * 20 + 4 + i, '$0800 + {} * 8 + FG_BLACK + BG_CYAN'.format(18 + i)) for i in range(3)]
+for pos, cn in ((5 * 20 + 2, 21), (5 * 20 + 3, 22), (4 * 20 + 14, 21), (4 * 20 + 15, 22), (6 * 20 + 16, 21), (6 * 20 + 17, 22)):
     sea_bt.append((pos, '$0800 + {} * 8 + FG_WHITE + BG_CYAN'.format(cn)))
 
 with open(os.path.join(os.path.dirname(OUT), 'gfx_const.bas'), 'w', newline='\r\n') as f:
@@ -774,7 +778,7 @@ L.append("' Docking target: 7 sizes x 8 cards (lander L/R, rocket top L/R; top, 
 emit(L, 'lm_f', lm_f, lambda n: 'size {} card {}'.format(LM_SIZES[n // 8], n % 8))
 
 L.append('')
-L.append("' Mother ship target: 7 sizes x 8 cards (hub L/R, body L/R; top, bottom)")
+L.append("' Command Module target: 7 sizes x 8 cards (hub L/R, body L/R; top, bottom)")
 emit(L, 'cm_f', cm_f, lambda n: 'size {} card {}'.format(LM_SIZES[n // 8], n % 8))
 L.append('')
 L.append("' Flag: stripes, then the blue corner and pole")
@@ -816,6 +820,7 @@ L.append('')
 L.append("' Re-entry: flames, chute; splashdown cards, waves, rotor")
 emit(L, 'flame_f', flame_f)
 emit(L, 'chute_c', chute_c)
+emit(L, 'drogue_c', drogue_c)
 emit(L, 'sea_c', sea_c)
 emit(L, 'wave_f', wave_f)
 emit(L, 'heli_f', heli_f)

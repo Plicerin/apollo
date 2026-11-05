@@ -1,8 +1,8 @@
 # Apollo
 
 An original game for the Intellivision. Fly to the Moon and back from the
-cockpit, in eight stages: liftoff, leaving Earth orbit, docking with the lander,
-braking at the Moon, landing, lifting off to meet the mother ship, heading home,
+cockpit, in eight stages: liftoff, leaving Earth orbit, docking with the Lunar Module,
+braking at the Moon, landing, lifting off to meet the Command Module, heading home,
 and re-entry. Every prompt is in plain English.
 
 **Play it in your browser:** https://plicerin.github.io/apollo/

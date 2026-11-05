@@ -7,5 +7,5 @@
 	CONST MAP_LY = 25		' top of the land, screen row
 	CONST BASE_N = 28		' moon base lander cards
 	CONST BASE_E = 29		' base_bt entries
-	CONST SEA_N = 15		' splashdown cards
+	CONST SEA_N = 13		' splashdown cards
 	CONST SEA_E = 9		' sea_bt entries
