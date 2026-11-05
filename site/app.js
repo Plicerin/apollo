@@ -232,7 +232,23 @@ class Sound {
     if (p) { sound.suspend(); if (state === 'play') setOverlay('paused'); }
     else { sound.resume(); setOverlay('none'); }
   }
-  function say(t) { statusEl.textContent = t; }
+  // The line under the screen follows what the game is showing, however it got there
+  const CONTROLS = statusEl.innerHTML;
+  let demoing = false, statusKey = '', statusAt = -99;
+  function syncStatus(now) {
+    if (!now && Math.abs(m.frame - statusAt) < 30) return;
+    statusAt = m.frame;
+    const t = m.screenText();
+    if (t.includes('A P O L L O')) demoing = false;
+    else if (t.includes('DEMO')) demoing = true;
+    const n = /STAGE (\d) OF 8/.exec(t);
+    let html = CONTROLS;
+    if (demoing) html = 'The demo pilot is flying. Press any button to take over at the title screen.';
+    else if (t.includes('A P O L L O')) html = 'On the title screen. Press the button to start at Stage 1, or a keypad number to pick a stage.';
+    else if (t.includes('PAUSED')) html = 'The trip map. Press any keypad key to carry on.';
+    else if (n) html = 'Stage ' + n[1] + ' is lined up. Press the button to go.';
+    if (html !== statusKey) { statusKey = html; statusEl.innerHTML = html; }
+  }
 
   async function begin(how) {
     await sound.start();
@@ -241,9 +257,10 @@ class Sound {
     m.reset();
     keys.clear(); letGo.clear(); heldSide = 0; heldKey = 0; pointerDisc = -1; tapCode = 0;
     fastForward(40);
-    if (how === 'title') say('On the title screen. Press the button to start at Stage 1.');
-    else if (how === 'demo') { fastForward(900); say('The demo pilot is flying. Press any button to take over at the title screen.'); }
-    else { press(PAD.key[how], 8); say('Stage ' + how + ' is lined up. Press the button to go.'); }
+    demoing = how === 'demo';
+    if (how === 'demo') fastForward(900);
+    else if (how !== 'title') press(PAD.key[how], 8);
+    syncStatus(true);
     setPaused(false);
     setOverlay('none');
     canvas.focus({ preventScroll: true });
@@ -261,7 +278,7 @@ class Sound {
     readInput();
     let ran = false;
     while (acc >= FRAME_MS) { m.runFrame(); acc -= FRAME_MS; ran = true; }
-    if (ran) { paint(); sound.flush(); }
+    if (ran) { paint(); sound.flush(); if (state === 'play') syncStatus(); }
   }
 
   // keyboard, only while the game has focus
