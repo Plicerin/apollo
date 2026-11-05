@@ -782,16 +782,12 @@ flag_f:
 	DATA $000F,$000F,$007F,$0000	' 0
 	DATA $F0F0,$80F0,$8080,$8080	' 1
 
-' Moon base: astronaut poses (down, salute, wave, wave), flag ripple frames, lander cards
+' Moon base: astronaut poses (down, salute), flag ripple frames, lander cards
 ast_f:
 	DATA $3F1E,$2121,$1E3F,$7F7F	' 0
 	DATA $5D5D,$1E5D,$333F,$7733	' 1
 	DATA $3F1E,$A1E1,$DEBF,$3F7F	' 2
 	DATA $3D3D,$1E3D,$333F,$7733	' 3
-	DATA $7D39,$4545,$3B7D,$FEFF	' 4
-	DATA $D8D8,$38D8,$6C7C,$EE6C	' 5
-	DATA $7D38,$4745,$3A7E,$FEFF	' 6
-	DATA $D8D8,$38D8,$6C7C,$EE6C	' 7
 flag_a:
 	DATA $F880,$FFFF,$FFFF,$FFFF	' 0
 	DATA $87FF,$8080,$8080,$8080	' 1

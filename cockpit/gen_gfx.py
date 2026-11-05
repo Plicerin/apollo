@@ -569,11 +569,7 @@ def tall(rows):
 ast_f = (tall(['...XXXX.', '..XXXXXX', '..X....X', '..X....X', '..XXXXXX', '...XXXX.', '.XXXXXXX', '.XXXXXXX',
                '.X.XXX.X', '.X.XXX.X', '.X.XXX.X', '...XXXX.', '..XXXXXX', '..XX..XX', '..XX..XX', '.XXX.XXX']) +
          tall(['...XXXX.', '..XXXXXX', 'XXX....X', 'X.X....X', 'X.XXXXXX', 'XX.XXXX.', '.XXXXXXX', '..XXXXXX',
-               '..XXXX.X', '..XXXX.X', '..XXXX.X', '...XXXX.', '..XXXXXX', '..XX..XX', '..XX..XX', '.XXX.XXX']) +
-         tall(['..XXX..X', '.XXXXX.X', '.X...X.X', '.X...X.X', '.XXXXX.X', '..XXX.XX', 'XXXXXXXX', 'XXXXXXX.',
-               'XX.XX...', 'XX.XX...', 'XX.XX...', '..XXX...', '.XXXXX..', '.XX.XX..', '.XX.XX..', 'XXX.XXX.']) +
-         tall(['..XXX...', '.XXXXX.X', '.X...X.X', '.X...XXX', '.XXXXXX.', '..XXX.X.', 'XXXXXXXX', 'XXXXXXX.',
-               'XX.XX...', 'XX.XX...', 'XX.XX...', '..XXX...', '.XXXXX..', '.XX.XX..', '.XX.XX..', 'XXX.XXX.']))
+               '..XXXX.X', '..XXXX.X', '..XXXX.X', '...XXXX.', '..XXXXXX', '..XX..XX', '..XX..XX', '.XXX.XXX']))
 
 # Flag: three ripple frames, each white, red, blue (two cards each). The pole
 # is the white layer's first column. The blue corner has holes for its stars.
@@ -784,7 +780,7 @@ L.append('')
 L.append("' Flag: stripes, then the blue corner and pole")
 emit(L, 'flag_f', flag_f)
 L.append('')
-L.append("' Moon base: astronaut poses (down, salute, wave, wave), flag ripple frames, lander cards")
+L.append("' Moon base: astronaut poses (down, salute), flag ripple frames, lander cards")
 emit(L, 'ast_f', ast_f)
 emit(L, 'flag_a', flag_a)
 emit(L, 'base_c', base_c)

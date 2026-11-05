@@ -3058,8 +3058,8 @@ fan_c:	DATA FG_YELLOW, FG_WHITE, FG_GREEN, FG_RED
 	INCLUDE "gfx.bas"
 
 	REM ===================== TRANQUILITY BASE =================
-	' The reward for landing: the lander on the Moon, a waving flag, one
-	' astronaut saluting and one waving, the Earth overhead, the welcome,
+	' The reward for landing: the Lunar Module on the Moon, a waving flag, one
+	' astronaut saluting (the other has the camera), the Earth overhead, the welcome,
 	' then the fanfare and the crowd. GRAM 10-47 are free here: whatever
 	' comes next reloads its own cards.
 base_scene: PROCEDURE
@@ -3070,8 +3070,6 @@ base_scene: PROCEDURE
 	DEFINE 10, 6, flag_a
 	WAIT
 	DEFINE 16, 2, ast_f
-	WAIT
-	DEFINE 18, 2, VARPTR ast_f(16)
 	WAIT
 	DEFINE 20, 2, earth_f
 	WAIT
@@ -3089,7 +3087,6 @@ base_scene: PROCEDURE
 	#d = VARPTR text_msg(0) + 59 * 20: #p = 20: #c = FG_WHITE: GOSUB text20
 	#d = #d + 20: #p = 40: #c = FG_YELLOW: GOSUB text20
 	SPRITE 1, 42 + VISIBLE + ZOOMX2, 46 + ZOOMY4 + DOUBLEY, GR + 16 * 8 + SPR_WHITE
-	SPRITE 2, 84 + VISIBLE + ZOOMX2, 46 + ZOOMY4 + DOUBLEY, GR + 18 * 8 + SPR_WHITE
 	SPRITE 3, 62 + VISIBLE + ZOOMX2, 44 + ZOOMY4 + DOUBLEY, GR + 14 * 8 + SPR_BLUE
 	SPRITE 4, 62 + VISIBLE + ZOOMX2, 44 + ZOOMY4 + DOUBLEY, GR + 12 * 8 + SPR_RED
 	SPRITE 5, 62 + VISIBLE + ZOOMX2, 44 + ZOOMY4 + DOUBLEY, GR + 10 * 8 + SPR_WHITE
@@ -3101,15 +3098,13 @@ base_scene: PROCEDURE
 	DO
 		WAIT
 		#tv = #tv + 1
-		' One GRAM change a frame: flag ripple, then the two astronauts
+		' One GRAM change a frame: flag ripple, then the salute
 		i = #tv AND 15
 		IF (i AND 7) = 0 THEN
 			j = (#tv / 8) % 3
 			DEFINE 10, 6, VARPTR flag_a(j * 24)
 		ELSEIF i = 4 THEN
 			IF #tv >= 80 THEN DEFINE 16, 2, VARPTR ast_f(8)
-		ELSEIF i = 12 THEN
-			IF (#tv / 16) AND 1 THEN DEFINE 18, 2, VARPTR ast_f(24) ELSE DEFINE 18, 2, VARPTR ast_f(16)
 		END IF
 		IF #tv = 170 THEN cel = 1
 		IF cel THEN GOSUB cheer
