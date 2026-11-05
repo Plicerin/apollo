@@ -1,116 +1,111 @@
 # Draws the hand controller for the page, as two SVGs with the same working parts:
 # pad_tall.svg, the real handset's shape, stands beside the screen on a computer;
 # pad_wide.svg puts the disc beside the keypad, so a phone's thumbs can reach it.
-# Our own drawing, from the handset's layout. The parts carry the data-key,
-# data-side and data-disc tags that app.js wires up.
+# Our own drawing. The parts carry the data-key, data-side and data-disc tags that
+# app.js wires up.
 import math
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-STAGES = {'1': 'LIFTOFF', '2': 'ORBIT', '3': 'DOCK', '4': 'BRAKE', '5': 'LAND',
-          '6': 'MEET UP', '7': 'HOME', '8': 'RE-ENTRY', '9': ''}
 KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'enter']
 
 
 def defs(p):
     return f'''<defs>
-<linearGradient id="{p}body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#46372b"/><stop offset=".55" stop-color="#31261e"/><stop offset="1" stop-color="#211912"/></linearGradient>
-<linearGradient id="{p}well" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0906"/><stop offset="1" stop-color="#2a2019"/></linearGradient>
-<linearGradient id="{p}cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4e6c2"/><stop offset=".5" stop-color="#dcc391"/><stop offset="1" stop-color="#b3935a"/></linearGradient>
-<linearGradient id="{p}btn" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6a5644"/><stop offset="1" stop-color="#2a2019"/></linearGradient>
-<radialGradient id="{p}rim" cx=".5" cy=".5" r=".5"><stop offset=".86" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#2a1d0c" stop-opacity=".55"/></radialGradient>
+<linearGradient id="{p}body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3d3530"/><stop offset=".5" stop-color="#352e29"/><stop offset="1" stop-color="#2c2622"/></linearGradient>
+<linearGradient id="{p}wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#191512"/><stop offset=".55" stop-color="#2b2521"/><stop offset="1" stop-color="#4a423b"/></linearGradient>
+<linearGradient id="{p}field" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#957f59"/><stop offset=".07" stop-color="#ae9971"/><stop offset="1" stop-color="#a48f68"/></linearGradient>
+<radialGradient id="{p}cap" cx=".5" cy=".46" r=".62"><stop offset="0" stop-color="#d4c8aa"/><stop offset=".5" stop-color="#bfb193"/><stop offset=".82" stop-color="#9c8e72"/><stop offset="1" stop-color="#7a6e56"/></radialGradient>
+<linearGradient id="{p}btn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4c443d"/><stop offset="1" stop-color="#231e1a"/></linearGradient>
+<linearGradient id="{p}well" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#181411"/><stop offset="1" stop-color="#4b433c"/></linearGradient>
+<radialGradient id="{p}rim" cx=".5" cy=".5" r=".5"><stop offset=".88" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#241805" stop-opacity=".6"/></radialGradient>
 </defs>'''
 
 
-def body(p, x, y, w, h):
-    return (f'<rect x="{x}" y="{y + 3}" width="{w}" height="{h}" rx="13" fill="#000" opacity=".45"/>'
-            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="url(#{p}body)" stroke="#120c08"/>'
-            f'<rect x="{x + 1.5}" y="{y + 1.5}" width="{w - 3}" height="{h - 3}" rx="10.5" fill="none" stroke="#fff" stroke-opacity=".07"/>')
+def body(p, x, y, w, h, r=6):
+    return (f'<rect x="{x}" y="{y + 3}" width="{w}" height="{h}" rx="{r + 1}" fill="#000" opacity=".45"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{r}" fill="url(#{p}body)" stroke="#191512"/>'
+            f'<rect x="{x + 1}" y="{y + 1}" width="{w - 2}" height="{h - 2}" rx="{r - 1}" fill="none" stroke="#fff" stroke-opacity=".08"/>')
 
 
-def key(p, name, cx, cy, cw, ch, hw, hh, fs):
-    label = {'clear': 'clear', 'enter': 'enter'}.get(name, name)
-    small = name in ('clear', 'enter')
-    size = fs * 0.62 if small else fs
-    return (f'<g class="k" data-key="{name}" role="button" aria-label="{label}">'
-            f'<rect class="hit" x="{cx - hw / 2}" y="{cy - hh / 2}" width="{hw}" height="{hh}"/>'
-            f'<rect x="{cx - cw / 2 - 3}" y="{cy - ch / 2 - 3}" width="{cw + 6}" height="{ch + 6}" rx="8" fill="#0b0705"/>'
-            f'<g class="press"><rect class="cap" x="{cx - cw / 2}" y="{cy - ch / 2}" width="{cw}" height="{ch}" rx="{min(cw, ch) * .36:.1f}" fill="url(#{p}cap)"/>'
-            f'<rect x="{cx - cw / 2 + 4}" y="{cy - ch / 2 + 2}" width="{cw - 8}" height="{ch * .28:.1f}" rx="{ch * .14:.1f}" fill="#fff" opacity=".28"/>'
-            f'<text class="num" x="{cx}" y="{cy + size * .36:.1f}" font-size="{size:.1f}">{label}</text></g></g>')
+def bay(p, x, y, w, h, fx, fy, fw, fh, r):
+    """The keypad's deep bay: a thick lip, the sloped walls with their rails, the tan floor."""
+    ix, iy, iw, ih = x + 7, y + 7, w - 14, h - 14
+    return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{r}" fill="#171310"/>'
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{r}" fill="none" stroke="#fff" stroke-opacity=".1"/>'
+            f'<rect x="{ix}" y="{iy}" width="{iw}" height="{ih}" rx="{r - 6}" fill="url(#{p}wall)"/>'
+            f'<rect x="{(ix + fx) / 2:.1f}" y="{(iy + fy) / 2:.1f}" width="{(iw + fw) / 2:.1f}" height="{(ih + fh) / 2:.1f}" rx="{r - 9}" fill="none" stroke="#8a7f70" stroke-opacity=".32" stroke-width="1.4" stroke-dasharray="15 7"/>'
+            f'<rect x="{fx}" y="{fy}" width="{fw}" height="{fh}" rx="2.5" fill="url(#{p}field)" stroke="#120e0b"/>')
 
 
-def side(p, which, label, left, x, y, w, h, hx, hw, tx):
-    grad = f'url(#{p}btn)'
-    flip = '' if left else f' transform="translate({2 * x + w} 0) scale(-1 1)"'
+def key(p, name, cx, cy, sock, cap, cell, fs):
+    wordy = name in ('clear', 'enter')
+    c = cap / 2
+    if wordy:
+        text = f'<text class="word" x="{cx}" y="{cy + fs * .19:.1f}" font-size="{fs * .6:.1f}">{name}</text>'
+    else:
+        # A wide, leaning numeral, as the real keys have
+        text = (f'<text class="num" transform="translate({cx} {cy + fs * .36:.1f}) skewX(-8) scale(1.28 1)" '
+                f'font-size="{fs:.1f}">{name}</text>')
+    return (f'<g class="k" data-key="{name}" role="button" aria-label="{name}">'
+            f'<rect class="hit" x="{cx - cell / 2}" y="{cy - cell / 2}" width="{cell}" height="{cell}"/>'
+            f'<rect x="{cx - sock / 2}" y="{cy - sock / 2}" width="{sock}" height="{sock}" rx="3.5" fill="#37302a" stroke="#1d1815" stroke-width=".8"/>'
+            f'<g class="press"><rect x="{cx - c}" y="{cy - c + 1}" width="{cap}" height="{cap}" rx="{cap * .4:.1f}" fill="#000" opacity=".4"/>'
+            f'<rect class="cap" x="{cx - c}" y="{cy - c}" width="{cap}" height="{cap}" rx="{cap * .4:.1f}" fill="url(#{p}cap)"/>'
+            f'{text}</g></g>')
+
+
+def side(p, which, label, left, x, y, w, h, hx, hw, tx, pad=8):
     rot = -90 if left else 90
     return (f'<g class="s" data-side="{which}" role="button" aria-label="{label} side button">'
-            f'<rect class="hit" x="{hx}" y="{y - 3}" width="{hw}" height="{h + 6}"/>'
-            f'<g{flip}><rect class="btn" x="{x}" y="{y}" width="{w}" height="{h}" rx="2.5" fill="{grad}" stroke="#0b0705"/></g>'
-            f'<text class="sl" transform="translate({tx} {y + h / 2}) rotate({rot})" y="2.6" font-size="7.5">{label}</text></g>')
+            f'<rect class="hit" x="{hx}" y="{y - pad}" width="{hw}" height="{h + pad * 2}"/>'
+            f'<rect class="btn" x="{x}" y="{y}" width="{w}" height="{h}" rx="1.5" fill="url(#{p}btn)" stroke="#120e0b" stroke-width=".8"/>'
+            f'<text class="sl" transform="translate({tx} {y + h / 2}) rotate({rot})" y="2.4" font-size="7">{label}</text></g>')
 
 
 def disc(p, cx, cy, r):
-    """Spun metal: wedges of light and dark, as round-brushed metal catches a lamp."""
+    """Spun metal in a stepped, round well: two lobes of light across the brushing."""
     out = [f'<g class="d" data-disc role="application" aria-label="Disc: press and drag to steer">'
-           f'<circle class="hit" cx="{cx}" cy="{cy}" r="{r + 16}"/>'
-           f'<circle cx="{cx}" cy="{cy}" r="{r + 9}" fill="url(#{p}well)"/>'
-           f'<circle cx="{cx}" cy="{cy}" r="{r + 9}" fill="none" stroke="#fff" stroke-opacity=".1"/>'
-           f'<g class="plate"><circle cx="{cx}" cy="{cy}" r="{r}" fill="#c8ae7e"/>']
-    n = 72
+           f'<circle class="hit" cx="{cx}" cy="{cy}" r="{r + 18}"/>'
+           f'<circle cx="{cx}" cy="{cy}" r="{r + 12}" fill="url(#{p}well)"/>'
+           f'<circle cx="{cx}" cy="{cy}" r="{r + 12}" fill="none" stroke="#000" stroke-opacity=".5"/>'
+           f'<circle cx="{cx}" cy="{cy}" r="{r + 7.5}" fill="#1a1613"/>'
+           f'<circle cx="{cx}" cy="{cy}" r="{r + 7.5}" fill="none" stroke="#fff" stroke-opacity=".14"/>'
+           f'<circle cx="{cx}" cy="{cy}" r="{r + 2}" fill="#0d0a08"/>'
+           f'<g class="plate"><circle cx="{cx}" cy="{cy}" r="{r}" fill="#a98f5e"/>']
+    n = 90
     for i in range(n):
         a0, a1 = 2 * math.pi * i / n, 2 * math.pi * (i + 1) / n
         m = (a0 + a1) / 2
-        t = 0.5 + 0.5 * math.cos(2 * (m - math.radians(62)))
-        t = t ** 2.4
-        u = 0.5 + 0.5 * math.cos(6 * m + 1)
-        v = 0.70 + 0.30 * t + 0.03 * u
-        col = '#%02x%02x%02x' % (min(255, int(238 * v)), min(255, int(208 * v)), min(255, int(152 * v)))
+        t = (0.5 + 0.5 * math.cos(2 * (m + math.radians(62)))) ** 3.4
+        v = 0.52 + 0.48 * t
+        col = '#%02x%02x%02x' % (int(240 * v), int(218 * v), int(160 * v))
         x0, y0 = cx + r * math.cos(a0), cy + r * math.sin(a0)
         x1, y1 = cx + r * math.cos(a1), cy + r * math.sin(a1)
-        out.append(f'<path d="M{cx} {cy}L{x0:.1f} {y0:.1f}A{r} {r} 0 0 1 {x1:.1f} {y1:.1f}Z" fill="{col}" stroke="{col}" stroke-width=".9"/>')
-    out.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="url(#{p}rim)"/>')
-    out.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#6e5529"/>')
-    out.append(f'<circle cx="{cx}" cy="{cy}" r="2" fill="#8a6c38"/></g>')
-    out.append(f'<circle class="knob" cx="{cx}" cy="{cy}" r="{r * .19:.1f}"/></g>')
+        out.append(f'<path d="M{cx} {cy}L{x0:.1f} {y0:.1f}A{r} {r} 0 0 1 {x1:.1f} {y1:.1f}Z" fill="{col}" stroke="{col}" stroke-width=".8"/>')
+    out.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="url(#{p}rim)"/></g>')
+    out.append(f'<circle class="knob" cx="{cx}" cy="{cy}" r="{r * .2:.1f}"/></g>')
     return ''.join(out)
 
 
-def cord(x, top, y):
-    """The coiled cord, leaving the handset's top corner."""
-    loops = ''.join(f'<ellipse cx="{x + (i % 2) * 2}" cy="{y - 4 - i * 6.2:.1f}" rx="9" ry="4.2" transform="rotate(-14 {x} {y - 4 - i * 6.2:.1f})"/>'
-                    for i in range(int((y - top) / 6.2)))
-    return f'<g fill="none" stroke="#0a0705" stroke-width="3">{loops}</g>'
-
-
 def tall():
-    p, W, H = 'pt', 240, 590
-    x, y, w, h = 12, 36, 216, 546
+    p, W, H = 'pt', 240, 480
+    x, y, w, h = 22, 44, 196, 427
     o = [f'<svg class="handset tall" viewBox="0 0 {W} {H}" role="group" aria-label="Hand controller" xmlns="http://www.w3.org/2000/svg">', defs(p)]
-    o.append(cord(198, 2, y + 3))
-    # Side buttons go first, so the body's edge sits over their inner end
-    for which, label, by in (('top', 'TOP', 306), ('lower', 'LOWER', 364)):
-        o.append(side(p, which, label, True, 5, by, 12, 48, 0, 33, 23))
-        o.append(side(p, which, label, False, 223, by, 12, 48, 207, 33, 217))
-    body_svg = body(p, x, y, w, h)
-    # Keep the side buttons clickable and visible: draw the body underneath them
-    o.insert(3, body_svg)
-    # The ledge the overlay slides in under
-    o.append(f'<rect x="{x + 1}" y="{y + 1}" width="{w - 2}" height="17" rx="10" fill="#fff" opacity=".05"/>')
-    o.append(f'<path d="M{x + 2} {y + 18}H{x + w - 2}" stroke="#120c08"/>')
-    # The keypad bay, and the Apollo overlay in it
-    bx, by, bw, bh = 34, 62, 172, 288
-    o.append(f'<rect x="{bx - 3}" y="{by - 3}" width="{bw + 6}" height="{bh + 6}" rx="15" fill="url(#{p}well)"/>')
-    o.append(f'<rect class="ov" x="{bx + 2}" y="{by + 2}" width="{bw - 4}" height="{bh - 4}" rx="10"/>')
-    o.append(f'<text class="ovt" x="120" y="{by + 18}" font-size="9">APOLLO</text>')
+    # The cord's stub, then the body and the ledge the overlays slide in under
+    o.append(f'<rect x="177" y="4" width="9" height="42" rx="4.5" fill="#0d0b09"/><rect x="179" y="7" width="2" height="36" rx="1" fill="#fff" opacity=".14"/>')
+    o.append(body(p, x, y, w, h))
+    o.append(f'<path d="M{x + 3} {y + 5.5}H{x + w - 3}" stroke="#171310" stroke-width="1.2"/>')
+    o.append(f'<path d="M{x + 3} {y + 3}H{x + w - 3}" stroke="#fff" stroke-opacity=".13" stroke-width="2.4"/>')
+    o.append(bay(p, 29, 103, 182, 218, 48, 120, 145, 182, 18))
     for i, name in enumerate(KEYS):
-        cx, cy = 68 + 52 * (i % 3), 100 + 58 * (i // 3)
-        o.append(key(p, name, cx, cy, 42, 28, 52, 58, 16))
-        if STAGES.get(name):
-            o.append(f'<text class="ovl" x="{cx}" y="{cy + 25}" font-size="7.6">{STAGES[name]}</text>')
-    o.append(f'<text class="ovf" x="120" y="{by + bh - 7}" font-size="7.2">IN FLIGHT, ANY KEY: TRIP MAP</text>')
-    o.append(disc(p, 120, 468, 70))
+        o.append(key(p, name, 76 + 44.5 * (i % 3), 146 + 44 * (i // 3), 37, 30, 44, 12.5))
+    o.append(disc(p, 120, 396, 52))
+    # Last, so their wide tap zones sit over the bay's lip
+    for which, label, by in (('top', 'TOP', 173), ('lower', 'LOWER', 222)):
+        o.append(side(p, which, label, True, 15, by, 7.5, 29, 0, 46, 8))
+        o.append(side(p, which, label, False, 217.5, by, 7.5, 29, 194, 46, 232))
     o.append('</svg>')
     return ''.join(o)
 
@@ -118,17 +113,15 @@ def tall():
 def wide():
     p, W, H = 'pw', 360, 196
     o = [f'<svg class="handset wide" viewBox="0 0 {W} {H}" role="group" aria-label="Hand controller" xmlns="http://www.w3.org/2000/svg">', defs(p)]
-    o.append(body(p, 8, 5, 344, 186))
-    for which, label, by in (('top', 'TOP', 22), ('lower', 'LOWER', 102)):
-        o.append(side(p, which, label, True, 1, by, 12, 72, 0, 30, 19))
-        o.append(side(p, which, label, False, 347, by, 12, 72, 330, 30, 341))
-    o.append(disc(p, 112, 98, 62))
-    bx, by, bw, bh = 194, 13, 134, 170
-    o.append(f'<rect x="{bx - 3}" y="{by - 3}" width="{bw + 6}" height="{bh + 6}" rx="13" fill="url(#{p}well)"/>')
-    o.append(f'<rect class="ov" x="{bx + 2}" y="{by + 2}" width="{bw - 4}" height="{bh - 4}" rx="8"/>')
+    o.append(body(p, 9, 5, 342, 186))
+    o.append(disc(p, 108, 98, 56))
+    o.append(bay(p, 186, 8, 150, 180, 199, 18, 124, 160, 14))
     for i, name in enumerate(KEYS):
-        cx, cy = 219 + 42 * (i % 3), 37 + 41 * (i // 3)
-        o.append(key(p, name, cx, cy, 34, 30, 42, 41, 15))
+        o.append(key(p, name, 220 + 41 * (i % 3), 37 + 41 * (i // 3), 36, 30, 41, 13))
+    # Bigger than the real thing here, for thumbs
+    for which, label, by in (('top', 'TOP', 24), ('lower', 'LOWER', 102)):
+        o.append(side(p, which, label, True, 1, by, 9, 70, 0, 32, 21, 4))
+        o.append(side(p, which, label, False, 350, by, 9, 70, 338, 22, 343, 4))
     o.append('</svg>')
     return ''.join(o)
 

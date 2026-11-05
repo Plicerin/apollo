@@ -154,7 +154,7 @@ class Sound {
   // input
   const keys = new Set();
   // A quick tap must still reach the game, which looks at the controller once a frame
-  const MIN_HOLD = 3;
+  const MIN_HOLD = 6;   // the game's keypad reader wants the same key on several frames running
   const pressedAt = new Map(), letGo = new Set();
   let pointerDisc = -1, heldSide = 0, heldKey = 0, padDisc = -1, padSide = 0, tapCode = 0, tapUntil = 0;
   // A quick tap on the drawn controller still lasts long enough for the game to see

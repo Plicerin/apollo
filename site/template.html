@@ -79,7 +79,7 @@
   #play { padding-block: 12px 56px; }
   .console { background: linear-gradient(180deg, var(--walnut-2), var(--walnut)); border: 1px solid #000; border-radius: 12px; padding: 14px; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 24px 60px rgba(0, 0, 0, .55); scroll-margin-top: 12px; }
   .bay { display: grid; grid-template-columns: minmax(0, 1fr) var(--pw); gap: 14px; align-items: start; }
-  .console { --pw: clamp(176px, calc((100vh - 80px) / 2.46), 270px); width: min(100%, calc((100vh - 150px) * 11 / 7 + var(--pw) + 42px)); margin-inline: auto; }
+  .console { --pw: clamp(190px, calc((100vh - 120px) / 2), 290px); width: min(100%, calc((100vh - 150px) * 11 / 7 + var(--pw) + 42px)); margin-inline: auto; }
   .tube { position: relative; background: #000; border: 3px solid var(--gold); border-radius: 6px; overflow: hidden; }
   #screen { display: block; width: 100%; height: auto; aspect-ratio: 11 / 7; cursor: pointer; touch-action: manipulation; }
   #screen:focus-visible { outline: none; }
@@ -100,12 +100,9 @@
   .handset .hit { fill: transparent; }
   .handset [role=button], .handset .d { cursor: pointer; touch-action: none; -webkit-tap-highlight-color: transparent; }
   .handset text { pointer-events: none; text-anchor: middle; }
-  .handset .num { font-family: var(--body); font-weight: 700; fill: #2a1d10; }
-  .handset .ov { fill: #101639; stroke: var(--gold); stroke-width: 1; }
-  .handset .ovt { font-family: var(--pixel); fill: var(--prompt); letter-spacing: 1px; }
-  .handset .ovl { font-family: var(--mono); font-weight: 500; fill: #e6dcc6; }
-  .handset .ovf { font-family: var(--mono); font-weight: 500; fill: var(--gold); }
-  .handset .sl { font-family: var(--mono); font-weight: 500; fill: var(--gold); opacity: .8; }
+  .handset .num { font-family: var(--body); font-weight: 700; fill: #26211c; }
+  .handset .word { font-family: var(--body); font-weight: 500; fill: #26211c; }
+  .handset .sl { font-family: var(--mono); font-weight: 500; fill: var(--gold); opacity: .85; }
   .handset .k:hover .cap { filter: brightness(1.08); }
   .handset .k.down .press { transform: translateY(1.5px); }
   .handset .k.down .cap { fill: var(--prompt); }
@@ -115,7 +112,7 @@
   .handset .knob { fill: var(--prompt); stroke: #6d5729; opacity: 0; pointer-events: none; }
   .handset .d.down .knob { opacity: .92; }
   .handset .d.down .plate { filter: brightness(.93); }
-  .pad-note { display: none; margin: 8px 0 0; text-align: center; font: 500 11px/1.3 var(--mono); color: var(--gold); }
+  .pad-note { margin: 10px 0 0; text-align: center; font: 500 11px/1.3 var(--mono); color: var(--gold); }
 
   .deck { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
   .deck .group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -193,7 +190,6 @@
     #status { order: 4; margin-top: 0; }
     .handset.tall { display: none; }
     .handset.wide { display: block; }
-    .pad-note { display: block; }
     .stage, .pits, .rules { grid-template-columns: minmax(0, 1fr); }
     .stage:nth-of-type(even) .scr { order: 0; }
     .moments { grid-template-columns: repeat(2, minmax(0, 1fr)); }
